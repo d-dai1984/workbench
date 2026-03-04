@@ -654,6 +654,26 @@
   color: rgba(0, 0, 0, 0.45);
 }
 
+.content-page-placeholder {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 220px;
+}
+
+.content-page-placeholder-title {
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.88);
+}
+
+.content-page-placeholder-desc {
+  font-size: 14px;
+  line-height: 22px;
+  color: rgba(0, 0, 0, 0.45);
+}
+
 .dashboard-chart-card {
   flex: 1 1 0;
   min-width: 0;

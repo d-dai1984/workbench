@@ -334,8 +334,8 @@ const merchantFundPromoConfig = {
 function App() {
   const [messageApi, contextHolder] = message.useMessage()
   const [collapsed, setCollapsed] = useState(false)
-  const [selectedKey, setSelectedKey] = useState('account-acquisition')
-  const [openSubmenuKey, setOpenSubmenuKey] = useState<string | null>('account-acquisition')
+  const [selectedKey, setSelectedKey] = useState('dashboard')
+  const [openSubmenuKey, setOpenSubmenuKey] = useState<string | null>(null)
   const [selectedSubKey, setSelectedSubKey] = useState('navigation')
 
   const [isMerchantModalOpen, setIsMerchantModalOpen] = useState(false)
@@ -427,6 +427,104 @@ function App() {
     </ModuleContainer>
   )
 
+  const accountAcquisitionCard = (
+    <ModuleContainer
+      title="Account Acquisition"
+      action={<Button type="link">See all</Button>}
+      className="account-acquisition-module-card"
+    >
+      <div className="content-page-placeholder">
+        <div className="content-page-placeholder-title">
+          {subItems.find(({ key }) => key === selectedSubKey)?.label ?? 'Prospective Customers'}
+        </div>
+        <div className="content-page-placeholder-desc">
+          This is a dedicated right-side page for Account Acquisition.
+        </div>
+      </div>
+    </ModuleContainer>
+  )
+
+  const renderRightContent = () => {
+    if (selectedKey === 'dashboard') {
+      return (
+        <div className="dashboard-container">
+          {/* Welcome */}
+          <div className="dashboard-welcome">
+            <Row className="dashboard-welcome-grid" align="middle" justify="space-between" gutter={[16, 16]}>
+              <Col xs={24} lg={16}>
+                <div className="dashboard-welcome-left">
+                  <div className="dashboard-title">Hi, Alex Kelly</div>
+                  <div className="dashboard-subtitle">Today’s focus & key objectives</div>
+                </div>
+              </Col>
+              <Col xs={24} lg={8}>
+                <div className="dashboard-welcome-right">
+                  <Button
+                    type="primary"
+                    icon={<UserSwitchOutlined />}
+                    className="dashboard-action-btn dashboard-action-btn-primary"
+                    onClick={() => setIsManagerViewModalOpen(true)}
+                  >
+                    Manager View
+                  </Button>
+                  <Button
+                    type="text"
+                    icon={<SettingTwoTone twoToneColor="#1677ff" />}
+                    className="dashboard-action-btn dashboard-action-btn-text"
+                    onClick={openCustomPageModal}
+                  >
+                    Custom Page
+                  </Button>
+                </div>
+              </Col>
+            </Row>
+          </div>
+
+          {/* Todo List */}
+          <div className="dashboard-section">
+            {layoutMode === 'split-16-8' ? (
+              <Row gutter={[24, 24]} className="dashboard-layout-row">
+                <Col xs={24} lg={16}>
+                  {todoListCard}
+                </Col>
+                <Col xs={24} lg={8}>
+                  <div className="dashboard-side-card">
+                    <div className="dashboard-side-card-title">Right Container</div>
+                    <div className="dashboard-side-card-desc">
+                      This placeholder follows the 16+8 grid layout.
+                    </div>
+                  </div>
+                </Col>
+              </Row>
+            ) : (
+              todoListCard
+            )}
+          </div>
+
+          {/* Dashboard */}
+          <div className="dashboard-section">{dashboardCard}</div>
+        </div>
+      )
+    }
+
+    if (selectedKey === 'account-acquisition') {
+      return <div className="dashboard-container">{accountAcquisitionCard}</div>
+    }
+
+    return (
+      <div className="dashboard-container">
+        <ModuleContainer title="Page Preview">
+          <div className="content-page-placeholder">
+            <div className="content-page-placeholder-title">Current: {selectedKey}</div>
+            <div className="content-page-placeholder-desc">
+              This page is separated from Dashboard and can be implemented independently.
+            </div>
+          </div>
+        </ModuleContainer>
+      </div>
+    )
+  }
+
   return (
     <Layout style={{ minHeight: '100vh' }}>
       {contextHolder}
@@ -491,67 +589,7 @@ function App() {
             </aside>
           )}
         </div>
-        <Content className="workbench-content">
-          <div className="dashboard-container">
-            {/* Welcome */}
-            <div className="dashboard-welcome">
-              <Row className="dashboard-welcome-grid" align="middle" justify="space-between" gutter={[16, 16]}>
-                <Col xs={24} lg={16}>
-                  <div className="dashboard-welcome-left">
-                    <div className="dashboard-title">Hi, Alex Kelly</div>
-                    <div className="dashboard-subtitle">Today’s focus & key objectives</div>
-                  </div>
-                </Col>
-                <Col xs={24} lg={8}>
-                  <div className="dashboard-welcome-right">
-                    <Button
-                      type="primary"
-                      icon={<UserSwitchOutlined />}
-                      className="dashboard-action-btn dashboard-action-btn-primary"
-                      onClick={() => setIsManagerViewModalOpen(true)}
-                    >
-                      Manager View
-                    </Button>
-                    <Button
-                      type="text"
-                      icon={<SettingTwoTone twoToneColor="#1677ff" />}
-                      className="dashboard-action-btn dashboard-action-btn-text"
-                      onClick={openCustomPageModal}
-                    >
-                      Custom Page
-                    </Button>
-                  </div>
-                </Col>
-              </Row>
-            </div>
-
-            {/* Todo List */}
-            <div className="dashboard-section">
-              {layoutMode === 'split-16-8' ? (
-                <Row gutter={[24, 24]} className="dashboard-layout-row">
-                  <Col xs={24} lg={16}>
-                    {todoListCard}
-                  </Col>
-                  <Col xs={24} lg={8}>
-                    <div className="dashboard-side-card">
-                      <div className="dashboard-side-card-title">Right Container</div>
-                      <div className="dashboard-side-card-desc">
-                        This placeholder follows the 16+8 grid layout.
-                      </div>
-                    </div>
-                  </Col>
-                </Row>
-              ) : (
-                todoListCard
-              )}
-            </div>
-
-            {/* Dashboard */}
-            <div className="dashboard-section">
-              {dashboardCard}
-            </div>
-          </div>
-        </Content>
+        <Content className="workbench-content">{renderRightContent()}</Content>
       </Layout>
 
       <Modal
