@@ -2,60 +2,66 @@ import { useState } from 'react'
 import { ConfigProvider } from 'antd'
 import { Button, Input, Modal, message } from 'antd'
 import { CloseOutlined, MessageOutlined, SendOutlined } from '@ant-design/icons'
-import { klookBenchTheme } from './theme'
-import { KlookBenchLayout } from './components/layout'
-import { defaultNavConfig, defaultMerchantRoleItems } from './config'
-import type { NavConfig } from './config'
-import { getSubmenuItems } from './config/buildMenuItems'
-import { ModuleCard } from './components/ModuleCard'
-import { DashboardPage, ContentPlaceholder } from './components/dashboard'
+import { klook2026Theme, ThemeSync } from './shell/theme'
+import { KlookBenchLayout } from './shell/layout'
+import { defaultMerchantRoleItems, BUSINESS_LINE_KEYS } from './shell/config'
+import type { BusinessLineKey } from './shell/config'
+import { getSubmenuItems } from './shell/config/buildMenuItems'
+import { ModuleCard } from './shell/shared/ModuleCard'
+import { DashboardPage, ContentPlaceholder } from './demo/dashboard'
+import { GridPage } from './demo/grid/GridPage'
+import { DesignSystemRouter } from './modules/designsystem/DesignSystemRouter'
+import { PromotionCreativePage } from './modules/campaign'
+import { businessLineNavConfigs } from './modules/registry'
 import './App.css'
 
-const LAYOUT_MODE_STORAGE_KEY = 'klook-bench.dashboard.layout.mode'
-const NAV_CONFIG_STORAGE_KEY = 'klook-bench.nav-config'
-type LayoutMode = 'single' | 'split-16-8'
+const BIZ_LINE_STORAGE_KEY = 'klook-bench.business-line'
 
 type FeedbackMessage = { id: string; role: 'agent' | 'user'; text: string }
 
 function App() {
   const [messageApi, contextHolder] = message.useMessage()
-  const [navConfig, setNavConfig] = useState<NavConfig>(() => {
-    if (typeof window === 'undefined') return defaultNavConfig
-    try {
-      const raw = window.localStorage.getItem(NAV_CONFIG_STORAGE_KEY)
-      if (!raw) return defaultNavConfig
-      const parsed = JSON.parse(raw) as NavConfig
-      if (!parsed || !Array.isArray(parsed.groups)) return defaultNavConfig
-      return parsed
-    } catch {
-      return defaultNavConfig
-    }
+
+  // ---- Business line state ----
+  const [businessLine, setBusinessLine] = useState<BusinessLineKey>(() => {
+    if (typeof window === 'undefined') return 'bdbench'
+    const saved = window.localStorage.getItem(BIZ_LINE_STORAGE_KEY)
+    if (saved && BUSINESS_LINE_KEYS.includes(saved as BusinessLineKey)) return saved as BusinessLineKey
+    return 'bdbench'
   })
+
+  const defaultNavConfig = businessLineNavConfigs[businessLine]
+  const [navConfigOverride, setNavConfigOverride] = useState<Record<string, unknown> | null>(null)
+  const navConfig = (navConfigOverride as unknown as import('./shell/config/nav.types').NavConfig) ?? defaultNavConfig
+
+  const handleBusinessLineChange = (key: string) => {
+    if (BUSINESS_LINE_KEYS.includes(key as BusinessLineKey)) {
+      const bizKey = key as BusinessLineKey
+      setBusinessLine(bizKey)
+      setNavConfigOverride(null) // reset override when switching business line
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem(BIZ_LINE_STORAGE_KEY, bizKey)
+      }
+      messageApi.success(`Switched to ${defaultMerchantRoleItems.find(i => i.key === bizKey)?.title ?? bizKey}`)
+    }
+  }
+
+  // ---- UI state ----
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false)
-  const [isManagerViewModalOpen, setIsManagerViewModalOpen] = useState(false)
-  const [isCustomPageModalOpen, setIsCustomPageModalOpen] = useState(false)
-  const [layoutModeDraft, setLayoutModeDraft] = useState<LayoutMode>('single')
+  const [isNavSettingOpen, setIsNavSettingOpen] = useState(false)
+  const [navConfigDraft, setNavConfigDraft] = useState('')
+  const [showGridPage, setShowGridPage] = useState(false)
+  const [gridOverlayVisible, setGridOverlayVisible] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return window.localStorage.getItem('klook-bench.grid-overlay') === 'true'
+  })
+
+  // ---- Feedback ----
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false)
   const [feedbackDraft, setFeedbackDraft] = useState('')
   const [feedbackMessages, setFeedbackMessages] = useState<FeedbackMessage[]>([
     { id: 'feedback-welcome', role: 'agent', text: 'Hi! Please share your feedback about this page.' },
   ])
-  const [isNavSettingOpen, setIsNavSettingOpen] = useState(false)
-  const [navConfigDraft, setNavConfigDraft] = useState('')
-
-  const openCustomPageModal = () => {
-    const saved = typeof window !== 'undefined' ? window.localStorage.getItem(LAYOUT_MODE_STORAGE_KEY) : null
-    setLayoutModeDraft(saved === 'split-16-8' ? 'split-16-8' : 'single')
-    setIsCustomPageModalOpen(true)
-  }
-
-  const saveLayoutMode = () => {
-    if (typeof window !== 'undefined') {
-      window.localStorage.setItem(LAYOUT_MODE_STORAGE_KEY, layoutModeDraft)
-    }
-    setIsCustomPageModalOpen(false)
-    messageApi.success('布局样式已保存，请刷新页面查看效果')
-  }
 
   const handleSendFeedback = () => {
     const text = feedbackDraft.trim()
@@ -68,6 +74,7 @@ function App() {
     setFeedbackDraft('')
   }
 
+  // ---- Nav settings modal ----
   const openNavSettings = () => {
     setNavConfigDraft(JSON.stringify(navConfig, null, 2))
     setIsNavSettingOpen(true)
@@ -75,103 +82,78 @@ function App() {
 
   const applyNavConfig = () => {
     try {
-      const raw = JSON.parse(navConfigDraft) as any
-      let parsed: NavConfig
-
-      if (raw && Array.isArray(raw.groups)) {
-        // 已经是 NavConfig 结构
-        parsed = raw as NavConfig
-      } else {
-        // 兼容 navigation_schema/menu_structure 或直接数组/items 结构，自动转换为 NavConfig
-        const menu =
-          (raw && Array.isArray(raw.menu_structure) && raw.menu_structure) ||
-          (Array.isArray(raw) && raw) ||
-          (raw && Array.isArray(raw.items) && raw.items)
-
-        if (!Array.isArray(menu)) {
-          messageApi.error('JSON 结构不合法：需要 groups 或 menu_structure/items 数组')
-          return
-        }
-
-        parsed = {
-          groups: [
-            {
-              groupLabel: 'MENU',
-              items: menu.map((item: any) => ({
-                key: item.key,
-                label: item.label,
-                icon: typeof item.icon === 'string' ? item.icon : undefined,
-                children: Array.isArray(item.children)
-                  ? item.children.map((child: any) => ({
-                      key: child.key,
-                      label: child.label,
-                    }))
-                  : undefined,
-              })),
-            },
-          ],
-        }
-      }
-
-      setNavConfig(parsed)
-      if (typeof window !== 'undefined') {
-        window.localStorage.setItem(NAV_CONFIG_STORAGE_KEY, JSON.stringify(parsed, null, 2))
-      }
-      messageApi.success('导航配置已更新')
+      const parsed = JSON.parse(navConfigDraft)
+      setNavConfigOverride(parsed)
+      messageApi.success('Nav config applied successfully')
       setIsNavSettingOpen(false)
     } catch {
-      messageApi.error('JSON 解析失败，请检查格式')
+      messageApi.error('JSON parse error, please check format')
     }
   }
 
   const resetNavConfig = () => {
-    setNavConfig(defaultNavConfig)
+    setNavConfigOverride(null)
     setNavConfigDraft(JSON.stringify(defaultNavConfig, null, 2))
-    if (typeof window !== 'undefined') {
-      window.localStorage.removeItem(NAV_CONFIG_STORAGE_KEY)
-    }
-    messageApi.success('导航已重置为默认配置')
+    messageApi.success('Nav config reset to default')
   }
 
+  // ---- Content routing ----
   const renderContent = (selectedKey: string, selectedSubKey: string) => {
     if (selectedKey === 'My Bench' || selectedKey === 'dashboard') {
       return (
         <DashboardPage
-          onManagerViewClick={() => setIsManagerViewModalOpen(true)}
-          onCustomPageClick={openCustomPageModal}
+          onManagerViewClick={() => {}}
+          onCustomPageClick={() => {}}
         />
       )
     }
-    if (selectedKey === 'account-acquisition') {
-      const subItems = getSubmenuItems(navConfig, selectedKey)
-      const currentLabel = subItems?.find((i) => i.key === selectedSubKey)?.label ?? 'Prospective Customers'
-      return (
-        <div className="klook-bench-dashboard-container">
-          <ModuleCard title="Account Acquisition" action={<Button type="link">See all</Button>} className="klook-bench-account-acquisition-module-card">
-            <ContentPlaceholder title={currentLabel} description="This is a dedicated right-side page for Account Acquisition." />
-          </ModuleCard>
-        </div>
-      )
+
+    // Design System pages
+    if (businessLine === 'designsystem') {
+      return <DesignSystemRouter sectionKey={selectedKey} />
     }
+
+    // Campaign module pages
+    if (businessLine === 'campaign' && selectedKey === 'promotion' && selectedSubKey === 'create-promotion') {
+      return <PromotionCreativePage />
+    }
+
+    // Generic placeholder for all other routes
+    const subItems = getSubmenuItems(navConfig, selectedKey)
+    const currentLabel = subItems?.find((i) => i.key === selectedSubKey)?.label ?? selectedKey
     return (
       <div className="klook-bench-dashboard-container">
-        <ModuleCard title="Page Preview">
-          <ContentPlaceholder title={`Current: ${selectedKey}`} description="This page is separated from Dashboard and can be implemented independently." />
+        <ModuleCard title={`${defaultMerchantRoleItems.find(i => i.key === businessLine)?.title ?? businessLine} / ${selectedKey}`}>
+          <ContentPlaceholder title={currentLabel} description={`Business line: ${businessLine} | Module: ${selectedKey} | Page: ${selectedSubKey || 'index'}`} />
         </ModuleCard>
       </div>
     )
   }
 
   return (
-    <ConfigProvider theme={klookBenchTheme}>
+    <ConfigProvider theme={klook2026Theme}>
+      <ThemeSync />
       {contextHolder}
       <KlookBenchLayout
         navConfig={navConfig}
         merchantRoleItems={defaultMerchantRoleItems}
         onSearchClick={() => setIsSearchModalOpen(true)}
         onOpenNavSettings={openNavSettings}
+        onGridPageClick={() => setShowGridPage(true)}
+        gridOverlayVisible={gridOverlayVisible}
+        onGridOverlayChange={(v) => {
+          setGridOverlayVisible(v)
+          if (typeof window !== 'undefined') window.localStorage.setItem('klook-bench.grid-overlay', String(v))
+        }}
+        onBusinessLineChange={handleBusinessLineChange}
       >
-        {renderContent}
+        {(selectedKey, selectedSubKey) =>
+          showGridPage ? (
+            <GridPage onBack={() => setShowGridPage(false)} />
+          ) : (
+            renderContent(selectedKey, selectedSubKey)
+          )
+        }
       </KlookBenchLayout>
 
       <Modal title="Search" open={isSearchModalOpen} onCancel={() => setIsSearchModalOpen(false)} footer={null}>
@@ -180,60 +162,14 @@ function App() {
       </Modal>
 
       <Modal
-        title="Manager View"
-        open={isManagerViewModalOpen}
-        onCancel={() => setIsManagerViewModalOpen(false)}
-        onOk={() => setIsManagerViewModalOpen(false)}
-        okText="Apply"
-        cancelText="Cancel"
-      >
-        <p>Manager View modal scaffold is ready.</p>
-        <p>Role switching options will be implemented here.</p>
-      </Modal>
-
-      <Modal
-        title="Custom Page"
-        open={isCustomPageModalOpen}
-        onCancel={() => setIsCustomPageModalOpen(false)}
-        footer={[
-          <Button key="cancel" onClick={() => setIsCustomPageModalOpen(false)}>Cancel</Button>,
-          <Button key="save" type="primary" onClick={saveLayoutMode}>Save</Button>,
-        ]}
-      >
-        <div className="klook-bench-layout-style-picker">
-          <div className="klook-bench-layout-style-title">布局样式</div>
-          <div className="klook-bench-layout-style-thumbnail-grid">
-            <button
-              type="button"
-              className={`klook-bench-layout-style-thumbnail ${layoutModeDraft === 'single' ? 'is-active' : ''}`}
-              onClick={() => setLayoutModeDraft('single')}
-            >
-              <span className="klook-bench-layout-style-thumbnail-preview klook-bench-layout-style-thumbnail-preview--single">
-                <span />
-              </span>
-            </button>
-            <button
-              type="button"
-              className={`klook-bench-layout-style-thumbnail ${layoutModeDraft === 'split-16-8' ? 'is-active' : ''}`}
-              onClick={() => setLayoutModeDraft('split-16-8')}
-            >
-              <span className="klook-bench-layout-style-thumbnail-preview klook-bench-layout-style-thumbnail-preview--split">
-                <span className="layout-col-left" />
-                <span className="layout-col-right" />
-              </span>
-            </button>
-          </div>
-          <div className="klook-bench-layout-style-hint">Save 后刷新页面，即可查看所选布局。</div>
-        </div>
-      </Modal>
-
-      <Modal
         title="Navigation Settings"
         open={isNavSettingOpen}
         onCancel={() => setIsNavSettingOpen(false)}
-        onOk={applyNavConfig}
-        okText="Apply"
-        cancelText="Cancel"
+        footer={[
+          <Button key="reset" onClick={resetNavConfig} danger>Reset to Default</Button>,
+          <Button key="cancel" onClick={() => setIsNavSettingOpen(false)}>Cancel</Button>,
+          <Button key="apply" type="primary" onClick={applyNavConfig}>Apply</Button>,
+        ]}
       >
         <Input.TextArea
           rows={14}
@@ -241,11 +177,6 @@ function App() {
           onChange={(e) => setNavConfigDraft(e.target.value)}
           placeholder="Paste NavConfig JSON here"
         />
-        <div style={{ marginTop: 8, textAlign: 'right' }}>
-          <Button size="small" onClick={resetNavConfig}>
-            Reset to default
-          </Button>
-        </div>
       </Modal>
 
       <button type="button" className="klook-bench-feedback-fab" onClick={() => setIsFeedbackOpen((prev) => !prev)} aria-label="Open feedback">

@@ -1,0 +1,356 @@
+/* ===== Root layout ===== */
+.promo-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 0 24px 24px;
+  background: #F5F5F5;
+  min-height: 100%;
+  font-family: Roboto, 'SF Pro', -apple-system, sans-serif;
+}
+
+/* ===== Sub_title: breadcrumb + page header ===== */
+.promo-sub-title {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 24px;
+}
+
+.promo-page-header {
+  display: flex;
+  flex-direction: column;
+  background: #FFFFFF;
+}
+
+/* Breadcrumb */
+.promo-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 8px 0;
+}
+
+.promo-breadcrumb-item {
+  font-size: 14px;
+  line-height: 1.57;
+  color: rgba(0, 0, 0, 0.45);
+  cursor: pointer;
+}
+
+.promo-breadcrumb-item--active {
+  color: rgba(0, 0, 0, 0.88);
+  cursor: default;
+}
+
+.promo-breadcrumb-sep {
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.45);
+  padding: 0 8px;
+}
+
+/* Title bar */
+.promo-title-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.promo-title {
+  font-family: Poppins, sans-serif;
+  font-weight: 600;
+  font-size: 24px;
+  line-height: 1.32;
+  color: #212121;
+  margin: 0;
+}
+
+.promo-meta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.promo-meta-label {
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.45);
+}
+
+.promo-meta-value {
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.45);
+}
+
+.promo-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 8px;
+  background: #FAFAFA;
+  border: 1px solid #D9D9D9;
+  border-radius: 2px;
+  font-size: 12px;
+  line-height: 1.67;
+  color: rgba(0, 0, 0, 0.85);
+}
+
+/* ===== content_2_column ===== */
+.promo-content-2col {
+  display: flex;
+  justify-content: space-between;
+  gap: 0;
+}
+
+/* Left setting column */
+.promo-left-setting {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-width: 0;
+}
+
+/* Section card wrapper (white bg, rounded) */
+.promo-section-card {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 24px;
+  background: #FFFFFF;
+  border-radius: 12px;
+}
+
+/* Section header (title + desc) */
+.promo-section-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.promo-section-title {
+  font-family: Poppins, sans-serif;
+  font-weight: 600;
+  font-size: 20px;
+  line-height: 1.18;
+  color: #212121;
+  margin: 0;
+}
+
+.promo-section-desc {
+  font-family: Poppins, sans-serif;
+  font-size: 12px;
+  line-height: 1.44;
+  color: rgba(0, 0, 0, 0.45);
+  margin: 0;
+}
+
+/* Individual form card */
+.promo-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  border: 1px solid #E8E8E8;
+  border-radius: 12px;
+}
+
+.promo-card-title {
+  font-weight: 500;
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.85);
+}
+
+.promo-card-hint {
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.45);
+}
+
+/* Form rows inside cards */
+.promo-form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.promo-form-label {
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.45);
+}
+
+/* ===== Colored Placeholder blocks ===== */
+.promo-placeholder {
+  height: 32px;
+  border-radius: 2px;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  font-size: 12px;
+  color: #fff;
+  font-weight: 500;
+}
+
+.promo-placeholder::after {
+  content: attr(data-label);
+}
+
+.promo-placeholder--input {
+  background: #91d5ff;
+  border: 1px solid #69c0ff;
+}
+
+.promo-placeholder--select {
+  background: #b7eb8f;
+  border: 1px solid #95de64;
+  color: #135200;
+}
+
+.promo-placeholder--radio {
+  background: #d3adf7;
+  border: 1px solid #b37feb;
+  height: 24px;
+}
+
+.promo-placeholder--number {
+  background: #ffd591;
+  border: 1px solid #ffc069;
+  color: #873800;
+}
+
+.promo-placeholder--dropdown {
+  background: #87e8de;
+  border: 1px solid #5cdbd3;
+  color: #006d75;
+}
+
+.promo-placeholder--timepicker {
+  background: #adc6ff;
+  border: 1px solid #85a5ff;
+}
+
+.promo-placeholder--checkbox {
+  background: #ffadd2;
+  border: 1px solid #ff85c0;
+  color: #780650;
+  height: 24px;
+  margin-top: 4px;
+}
+
+.promo-placeholder--checkbox-group {
+  background: #ffadd2;
+  border: 1px solid #ff85c0;
+  color: #780650;
+  height: 24px;
+}
+
+.promo-placeholder--upload {
+  background: #ffe58f;
+  border: 1px dashed #ffc53d;
+  color: #874d00;
+}
+
+/* ===== Card selector group (Discount type / Sale Limit / Country / Stacking) ===== */
+.promo-card-selector-group {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.promo-card-selector-group--3col {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.promo-card-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  border: 1px solid #D9D9D9;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.promo-card-selector:hover {
+  border-color: #1890ff;
+}
+
+.promo-card-selector--active {
+  background: #e6f7ff;
+  border-color: #1890ff;
+}
+
+.promo-card-selector-title {
+  font-size: 14px;
+  font-weight: 400;
+  color: rgba(0, 0, 0, 0.85);
+}
+
+.promo-card-selector--active .promo-card-selector-title {
+  color: #1890ff;
+}
+
+.promo-card-selector-desc {
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.45);
+}
+
+.promo-card-selector--active .promo-card-selector-desc {
+  color: #1890ff;
+}
+
+/* ===== Divider (vertical line) ===== */
+.promo-divider {
+  width: 1px;
+  align-self: stretch;
+  background: #D9D9D9;
+  margin: 0 24px;
+  flex-shrink: 0;
+}
+
+/* ===== Right step nav ===== */
+.promo-right-step {
+  width: 180px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding-top: 8px;
+  border-radius: 4px;
+  position: sticky;
+  top: 24px;
+  align-self: flex-start;
+}
+
+.promo-step-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.promo-step-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #d9d9d9;
+  flex-shrink: 0;
+}
+
+.promo-step-dot--active {
+  background: #1890ff;
+}
+
+.promo-step-label {
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.45);
+  white-space: nowrap;
+}
+
+.promo-step-label--active {
+  color: #1890ff;
+}
+
+.promo-step-line {
+  width: 1px;
+  height: 32px;
+  background: #d9d9d9;
+  margin-left: 7.5px;
+}

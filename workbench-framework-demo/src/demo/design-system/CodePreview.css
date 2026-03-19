@@ -1,0 +1,87 @@
+/* ============================================================
+   CodePreview Component
+   ============================================================ */
+
+.code-preview {
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  margin-bottom: 24px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.code-preview__header {
+  padding: 12px 16px;
+  border-bottom: 1px solid #f0f0f0;
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.code-preview__title {
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(38, 38, 38, 0.88);
+}
+
+.code-preview__desc {
+  font-size: 13px;
+  color: rgba(38, 38, 38, 0.45);
+}
+
+.code-preview__demo {
+  padding: 24px;
+}
+
+.code-preview__actions {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 16px;
+  border-top: 1px solid #f0f0f0;
+  background: #fafafa;
+}
+
+.code-preview__action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  color: rgba(38, 38, 38, 0.45);
+  font-size: 15px;
+  transition: all 0.2s;
+}
+
+.code-preview__action-btn:hover {
+  color: var(--klook-bench-color-primary, #FF5B00);
+  background: rgba(255, 91, 0, 0.06);
+}
+
+.code-preview__action-btn--active {
+  color: var(--klook-bench-color-primary, #FF5B00);
+}
+
+.code-preview__code {
+  border-top: 1px solid #f0f0f0;
+  background: #1e1e1e;
+  overflow-x: auto;
+}
+
+.code-preview__code pre {
+  margin: 0;
+  padding: 16px 20px;
+}
+
+.code-preview__code code {
+  font-family: 'SF Mono', 'Monaco', 'Menlo', 'Consolas', monospace;
+  font-size: 13px;
+  line-height: 1.7;
+  color: #d4d4d4;
+  white-space: pre;
+  tab-size: 2;
+}

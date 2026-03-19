@@ -1,0 +1,29 @@
+{
+  "groups": [
+    {
+      "groupLabel": "BD BENCH",
+      "items": [
+        { "key": "My Bench", "label": "My Bench", "icon": "dashboard" },
+        {
+          "key": "account-acquisition",
+          "label": "Account Acquisition",
+          "icon": "account-acquisition",
+          "children": [
+            { "key": "prospective", "label": "Prospective Customers" },
+            { "key": "lead-management", "label": "Lead Management" },
+            { "key": "conversion", "label": "Conversion Tracking" }
+          ]
+        },
+        {
+          "key": "account-management",
+          "label": "Account Management",
+          "icon": "account-management",
+          "children": [
+            { "key": "merchant-profile", "label": "Merchant Profile" },
+            { "key": "account-settings", "label": "Account Settings" }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+export { PromotionCreativePage } from './PromotionCreativePage'

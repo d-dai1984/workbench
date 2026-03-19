@@ -1,0 +1,31 @@
+{
+  "groups": [
+    {
+      "groupLabel": "ATOMIC COMPONENTS",
+      "items": [
+        { "key": "ds-overview", "label": "Overview" },
+        { "key": "ds-color", "label": "Color System" },
+        { "key": "ds-typography", "label": "Typography" },
+        { "key": "ds-button", "label": "Button" },
+        { "key": "ds-input", "label": "Input" },
+        { "key": "ds-select", "label": "Select & Picker" },
+        { "key": "ds-controls", "label": "Radio / Checkbox / Switch" },
+        { "key": "ds-tag-badge", "label": "Tag & Badge" },
+        { "key": "ds-avatar", "label": "Avatar" },
+        { "key": "ds-feedback", "label": "Alert & Progress" },
+        { "key": "ds-nav", "label": "Navigation" },
+        { "key": "ds-data", "label": "Table & Card" },
+        { "key": "ds-states", "label": "States" }
+      ]
+    },
+    {
+      "groupLabel": "MODULE COMPONENTS",
+      "items": [
+        { "key": "ds-campaign-table", "label": "Campaign Table" },
+        { "key": "ds-template-card", "label": "Template Card" },
+        { "key": "ds-heatmap", "label": "Heatmap Calendar" },
+        { "key": "ds-step-form", "label": "Step Form" }
+      ]
+    }
+  ]
+}

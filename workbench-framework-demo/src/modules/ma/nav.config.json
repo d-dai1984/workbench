@@ -1,0 +1,28 @@
+{
+  "groups": [
+    {
+      "groupLabel": "MA",
+      "items": [
+        { "key": "My Bench", "label": "My Bench", "icon": "dashboard" },
+        {
+          "key": "merchant-overview",
+          "label": "Merchant Overview",
+          "icon": "account-management",
+          "children": [
+            { "key": "merchant-list", "label": "Merchant List" },
+            { "key": "merchant-detail", "label": "Merchant Detail" }
+          ]
+        },
+        {
+          "key": "contract",
+          "label": "Contract",
+          "icon": "settlement-risk",
+          "children": [
+            { "key": "contract-list", "label": "Contract List" },
+            { "key": "contract-create", "label": "Create Contract" }
+          ]
+        }
+      ]
+    }
+  ]
+}

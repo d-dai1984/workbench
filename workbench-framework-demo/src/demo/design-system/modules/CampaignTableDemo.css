@@ -1,0 +1,91 @@
+.campaign-table .ant-table-thead > tr > th {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: rgba(38,38,38,0.45);
+  background: #fafafa;
+}
+
+.ct-name {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.ct-tag {
+  font-size: 11px;
+}
+
+.ct-date {
+  font-size: 12px;
+  color: rgba(38,38,38,0.45);
+  margin-top: 2px;
+}
+
+.ct-date .anticon {
+  margin-right: 4px;
+}
+
+.ct-progress-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.ct-progress {
+  width: 100px;
+}
+
+.ct-progress-text {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(38,38,38,0.65);
+}
+
+.ct-budget {
+  font-size: 12px;
+  color: rgba(38,38,38,0.45);
+}
+
+.ct-updated {
+  font-size: 12px;
+  color: rgba(38,38,38,0.35);
+  margin-top: 4px;
+}
+
+.ct-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.ct-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.ct-expand-icon {
+  cursor: pointer;
+  font-size: 10px;
+  color: rgba(38,38,38,0.45);
+  transition: transform 0.2s;
+  margin-right: 8px;
+}
+
+.ct-expand-icon--open {
+  transform: rotate(90deg);
+}
+
+.ct-expand-spacer {
+  display: inline-block;
+  width: 18px;
+}
+
+.sparkline-svg {
+  vertical-align: middle;
+}

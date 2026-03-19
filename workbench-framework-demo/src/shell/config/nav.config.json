@@ -1,0 +1,89 @@
+{
+  "groups": [
+    {
+      "groupLabel": "MENU",
+      "items": [
+        { "key": "My Bench", "label": "My Bench", "icon": "dashboard" },
+        {
+          "key": "account-acquisition",
+          "label": "Account Acquisition",
+          "icon": "account-acquisition",
+          "children": [
+            { "key": "prospective", "label": "Prospective Customers" },
+            { "key": "lead-management", "label": "Lead Management" },
+            { "key": "conversion", "label": "Conversion Tracking" },
+            { "key": "acquisition", "label": "Acquisition Analysis" }
+          ]
+        },
+        {
+          "key": "account-management",
+          "label": "Account Management",
+          "icon": "account-management",
+          "children": [
+            { "key": "merchant-profile", "label": "Merchant Profile" },
+            { "key": "account-settings", "label": "Account Settings" },
+            { "key": "permission-control", "label": "Permission Control" },
+            { "key": "audit-logs", "label": "Audit Logs" }
+          ]
+        },
+        {
+          "key": "activity-growth",
+          "label": "Activity & Growth",
+          "icon": "activity-growth",
+          "children": [
+            { "key": "campaign-planning", "label": "Campaign Planning" },
+            { "key": "traffic-insights", "label": "Traffic Insights" },
+            { "key": "growth-experiments", "label": "Growth Experiments" },
+            { "key": "retention-report", "label": "Retention Report" }
+          ]
+        },
+        {
+          "key": "settlement-risk",
+          "label": "Settlement & Risk",
+          "icon": "settlement-risk",
+          "children": [
+            { "key": "settlement-center", "label": "Settlement Center" },
+            { "key": "risk-overview", "label": "Risk Overview" },
+            { "key": "dispute-cases", "label": "Dispute Cases" },
+            { "key": "compliance-check", "label": "Compliance Check" }
+          ]
+        }
+      ]
+    },
+    {
+      "groupLabel": "GENERAL",
+      "items": [
+        {
+          "key": "task",
+          "label": "Task",
+          "icon": "task",
+          "children": [
+            { "key": "my-tasks", "label": "My Tasks" },
+            { "key": "team-tasks", "label": "Team Tasks" },
+            { "key": "task-calendar", "label": "Task Calendar" }
+          ]
+        },
+        {
+          "key": "knowledge-tools",
+          "label": "Knowledge & Tools",
+          "icon": "knowledge-tools",
+          "children": [
+            { "key": "knowledge-base", "label": "Knowledge Base" },
+            { "key": "playbooks", "label": "Playbooks" },
+            { "key": "tool-center", "label": "Tool Center" }
+          ]
+        },
+        {
+          "key": "notification",
+          "label": "Notification",
+          "icon": "notification",
+          "children": [
+            { "key": "all-notifications", "label": "All Notifications" },
+            { "key": "mentions", "label": "Mentions" },
+            { "key": "system-alerts", "label": "System Alerts" }
+          ]
+        }
+      ]
+    }
+  ]
+}

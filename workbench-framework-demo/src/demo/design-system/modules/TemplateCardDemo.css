@@ -1,0 +1,145 @@
+.tpl-card {
+  width: 280px;
+  border-radius: 12px;
+  border: 1px solid #f0f0f0;
+  overflow: hidden;
+  background: #fff;
+  transition: box-shadow 0.25s, transform 0.25s;
+}
+
+.tpl-card:hover {
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+  transform: translateY(-2px);
+}
+
+.tpl-card__cover {
+  position: relative;
+  height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.tpl-card__cover-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: #fff;
+  border: 1px solid #e6f4ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: #4096ff;
+}
+
+.tpl-card__preview {
+  width: 160px;
+  padding: 16px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tpl-card__preview-bar {
+  height: 20px;
+  border-radius: 3px;
+}
+
+.tpl-card__preview-bar--primary {
+  height: 24px;
+  border-radius: 3px;
+  background: #FF5B00;
+}
+
+.tpl-card__preview-line {
+  height: 6px;
+  border-radius: 3px;
+}
+
+.tpl-card__preview-line--long {
+  height: 6px;
+  border-radius: 3px;
+  width: 100%;
+  background: #e0e0e0;
+}
+
+.tpl-card__preview-line--medium {
+  height: 6px;
+  border-radius: 3px;
+  width: 70%;
+  background: #FFD8BF;
+}
+
+.tpl-card__preview-bar--cta {
+  height: 18px;
+  border-radius: 3px;
+  width: 60%;
+  background: #FF5B00;
+}
+
+.tpl-card__body {
+  padding: 16px;
+}
+
+.tpl-card__title {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 6px;
+  color: rgba(38,38,38,0.88);
+}
+
+.tpl-card__desc {
+  font-size: 13px;
+  color: rgba(38,38,38,0.45);
+  margin: 0 0 12px;
+  line-height: 1.5;
+}
+
+.tpl-card__tags {
+  margin-bottom: 12px;
+}
+
+.tpl-card__tag {
+  font-size: 11px;
+  border-radius: 4px;
+}
+
+.tpl-card__meta {
+  display: flex;
+  gap: 16px;
+  font-size: 12px;
+  color: rgba(38,38,38,0.35);
+}
+
+.tpl-card__meta .anticon {
+  margin-right: 4px;
+}
+
+.tpl-card__footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 16px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.tpl-card__action-btn {
+  color: rgba(38,38,38,0.35);
+  border: 1px solid #f0f0f0;
+  border-radius: 6px;
+  width: 32px;
+  height: 32px;
+}
+
+.tpl-card__action-btn:hover {
+  color: var(--klook-bench-color-primary, #FF5B00);
+  border-color: var(--klook-bench-color-primary, #FF5B00);
+}

@@ -290,6 +290,18 @@
   gap: 8px;
 }
 
+.klook-bench-header-grid-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-right: 12px;
+}
+
+.klook-bench-header-grid-toggle-icon {
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.45);
+}
+
 .klook-bench-header-quick-actions {
   display: flex;
   align-items: center;
@@ -349,6 +361,7 @@
   align-items: stretch;
   gap: 0px;
   height: calc(100vh - 56px);
+  overflow: hidden;
 }
 
 .klook-bench-sider {
@@ -358,11 +371,17 @@
 /* ----- ① 展开态（图标+文字）：左右边距 24px ----- */
 .klook-bench-sidebar-inner {
   padding: 56px 24px 24px 24px;
-  width: 280px;
-  min-width: 280px;
+  width: 256px;
+  min-width: 256px;
   height: 100%;
   display: flex;
   flex-direction: column;
+  overflow-y: auto;
+  scrollbar-width: none;          /* Firefox */
+  -ms-overflow-style: none;       /* IE / Edge */
+}
+.klook-bench-sidebar-inner::-webkit-scrollbar {
+  display: none;                  /* Chrome / Safari */
 }
 
 .klook-bench-sidebar-toggle-wrap {
@@ -470,17 +489,17 @@
 }
 
 /* ----- ② 收起态（仅图标）：精准计算以消除缝隙并保证对称 -----
-   总宽 112px = 侧栏 padding-left(24) + 菜单项 padding-left(16) + 图标(32) + 菜单项 padding-right(16) + 侧栏 padding-right(24) */
+   总宽 104px，与 8px 栅格对齐 */
 .klook-bench-sider.ant-layout-sider-collapsed .klook-bench-sidebar-inner {
-  width: 112px !important;
-  min-width: 112px !important;
-  max-width: 112px !important;
-  padding: 56px 24px 24px 24px;
+  width: 104px !important;
+  min-width: 104px !important;
+  max-width: 104px !important;
+  padding: 56px 20px 24px 20px;
 }
 
 .klook-bench-sider.ant-layout-sider-collapsed .klook-bench-sidebar-toggle-wrap {
   justify-content: flex-start;
-  padding-left: 16px;
+  padding-left: 12px;
 }
 
 .klook-bench-sider.ant-layout-sider-collapsed .klook-bench-sidebar-menu .ant-menu-item-group-title {
@@ -504,7 +523,7 @@
   display: flex !important;
   justify-content: center !important;
   align-items: center !important;
-  padding-inline: 16px !important;
+  padding-inline: 12px !important;
   gap: 0 !important;
   min-width: 0;
   width: 100%;
@@ -598,9 +617,43 @@
 
 /* ========== Content ========== */
 .klook-bench-content {
-  min-height: calc(100vh - 56px);
+  height: calc(100vh - 56px);
   padding: 32px;
   overflow-y: auto;
+}
+
+/* Grid overlay (24 cols, 16px gutter) – DOM-based, matched to AntD Row/Col */
+.klook-bench-grid-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  padding: 0 32px; /* match .klook-bench-content padding */
+  display: flex;
+  justify-content: center;
+  z-index: 10;
+  /* horizontal baseline lines */
+  background-image:
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent 31px,
+      rgba(0, 0, 0, 0.04) 31px,
+      rgba(0, 0, 0, 0.04) 32px
+    );
+}
+
+.klook-bench-grid-overlay-cols {
+  width: 100%;
+  max-width: 1200px;
+  height: 100%;
+  display: grid;
+  grid-template-columns: repeat(24, 1fr);
+  column-gap: 16px;
+}
+
+.klook-bench-grid-overlay-col {
+  background: rgba(59, 130, 246, 0.08);
+  border-radius: 2px;
 }
 
 /* Dashboard Layout Placeholder */
@@ -1465,4 +1518,129 @@
   .klook-bench-header-center {
     max-width: 200px;
   }
+}
+
+/* ========== Grid Page (merged) ========== */
+.klook-bench-grid-page {
+  width: 100%;
+  max-width: 1200px;
+  min-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 0;
+}
+
+.klook-bench-grid-page-header {
+  margin-bottom: 32px;
+}
+
+.klook-bench-grid-page-back {
+  margin-bottom: 12px;
+  padding-left: 0;
+}
+
+.klook-bench-grid-page-title {
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0 0 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.klook-bench-grid-page-desc {
+  font-size: 14px;
+  color: var(--klook-bench-color-text-secondary, rgba(0, 0, 0, 0.45));
+  margin: 0;
+}
+
+.klook-bench-grid-page-section {
+  margin-bottom: 36px;
+}
+
+.klook-bench-grid-page-section h2 {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 12px;
+}
+
+/* — Table — */
+.klook-bench-grid-page-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.klook-bench-grid-page-table th,
+.klook-bench-grid-page-table td {
+  padding: 8px 12px;
+  text-align: left;
+  border: 1px solid var(--klook-bench-color-border-light, #f0f0f0);
+}
+
+.klook-bench-grid-page-table th {
+  background: #fafafa;
+  font-weight: 500;
+}
+
+.klook-bench-grid-page-table code {
+  font-size: 12px;
+  padding: 2px 6px;
+  background: #f5f5f5;
+  border-radius: 4px;
+}
+
+/* — 24 columns — */
+.klook-bench-grid-page-24cols .klook-bench-grid-page-cell {
+  background: var(--klook-bench-color-primary);
+  color: #fff;
+  text-align: center;
+  padding: 8px 0;
+  font-size: 12px;
+  border-radius: 4px;
+}
+
+/* — Layout blocks — */
+.klook-bench-grid-page-layout-block {
+  margin-bottom: 24px;
+}
+
+.klook-bench-grid-page-layout-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: rgba(0, 0, 0, 0.88);
+}
+
+.klook-bench-grid-page-layout-cell {
+  background: #f0f0f0;
+  padding: 16px;
+  border-radius: 4px;
+  font-size: 13px;
+  text-align: center;
+  min-height: 48px;
+}
+
+/* — Gutter comparison — */
+.klook-bench-grid-page-gutters {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.klook-bench-grid-page-gutter-block {
+  max-width: 400px;
+}
+
+.klook-bench-grid-page-gutter-label {
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.45);
+  margin-bottom: 6px;
+}
+
+.klook-bench-grid-page-gutter-cell {
+  background: #e6f7ff;
+  padding: 12px;
+  border-radius: 4px;
+  font-size: 13px;
+  text-align: center;
 }

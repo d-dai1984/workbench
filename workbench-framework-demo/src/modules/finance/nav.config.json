@@ -1,0 +1,28 @@
+{
+  "groups": [
+    {
+      "groupLabel": "FINANCE",
+      "items": [
+        { "key": "My Bench", "label": "My Bench", "icon": "dashboard" },
+        {
+          "key": "settlement",
+          "label": "Settlement",
+          "icon": "settlement-risk",
+          "children": [
+            { "key": "settlement-center", "label": "Settlement Center" },
+            { "key": "settlement-report", "label": "Settlement Report" }
+          ]
+        },
+        {
+          "key": "invoice",
+          "label": "Invoice",
+          "icon": "knowledge-tools",
+          "children": [
+            { "key": "invoice-list", "label": "Invoice List" },
+            { "key": "create-invoice", "label": "Create Invoice" }
+          ]
+        }
+      ]
+    }
+  ]
+}

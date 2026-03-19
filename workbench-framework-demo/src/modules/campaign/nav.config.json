@@ -1,0 +1,28 @@
+{
+  "groups": [
+    {
+      "groupLabel": "CAMPAIGN",
+      "items": [
+        { "key": "My Bench", "label": "My Bench", "icon": "dashboard" },
+        {
+          "key": "promotion",
+          "label": "Promotion",
+          "icon": "activity-growth",
+          "children": [
+            { "key": "create-promotion", "label": "Create Promotion" },
+            { "key": "promotion-list", "label": "Promotion List" }
+          ]
+        },
+        {
+          "key": "campaign-deal",
+          "label": "Campaign Deal",
+          "icon": "settlement-risk",
+          "children": [
+            { "key": "deal-list", "label": "Deal List" },
+            { "key": "create-deal", "label": "Create Deal" }
+          ]
+        }
+      ]
+    }
+  ]
+}

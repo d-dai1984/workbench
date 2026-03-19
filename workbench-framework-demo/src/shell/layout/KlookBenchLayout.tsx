@@ -1,10 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Layout } from 'antd'
-import { getSubmenuItems } from '../../config/buildMenuItems'
+import { getSubmenuItems } from '../config/buildMenuItems'
 import { KlookBenchHeader } from './KlookBenchHeader'
 import { KlookBenchSidebar } from './KlookBenchSidebar'
 import { KlookBenchContent } from './KlookBenchContent'
-import type { NavConfig } from '../../config/nav.types'
+import type { NavConfig } from '../config/nav.types'
 import type { MenuProps } from 'antd'
 import type { MerchantRoleItem } from './KlookBenchHeader'
 
@@ -18,8 +18,10 @@ export interface KlookBenchLayoutProps {
   onSearchClick?: () => void
   onOpenNavSettings?: () => void
   onGridPageClick?: () => void
+  onDesignSystemClick?: () => void
   gridOverlayVisible?: boolean
   onGridOverlayChange?: (visible: boolean) => void
+  onBusinessLineChange?: (key: string) => void
   /** Content renderer: (selectedKey, selectedSubKey) => ReactNode */
   children: (selectedKey: string, selectedSubKey: string) => React.ReactNode
 }
@@ -32,8 +34,10 @@ export function KlookBenchLayout({
   onSearchClick,
   onOpenNavSettings,
   onGridPageClick,
+  onDesignSystemClick,
   gridOverlayVisible,
   onGridOverlayChange,
+  onBusinessLineChange,
   children,
 }: KlookBenchLayoutProps) {
   const firstNavKey = navConfig.groups[0]?.items[0]?.key ?? 'My Bench'
@@ -48,6 +52,14 @@ export function KlookBenchLayout({
     if (typeof window === 'undefined') return false
     return window.localStorage.getItem(SIDEBAR_COLLAPSED_STORAGE_KEY) === 'true'
   })
+
+  // Reset selection when navConfig changes (e.g. via Nav Settings apply)
+  useEffect(() => {
+    const newFirstKey = navConfig.groups?.[0]?.items?.[0]?.key ?? 'My Bench'
+    setSelectedKey(newFirstKey)
+    const subs = getSubmenuItems(navConfig, newFirstKey)
+    setSelectedSubKey(subs?.[0]?.key ?? '')
+  }, [navConfig])
 
   const onMenuClick: MenuProps['onClick'] = ({ key }) => {
     setSelectedKey(key)
@@ -75,8 +87,10 @@ export function KlookBenchLayout({
         onSearchClick={onSearchClick}
         onOpenNavSettings={onOpenNavSettings}
         onGridPageClick={onGridPageClick}
+        onDesignSystemClick={onDesignSystemClick}
         gridOverlayVisible={gridOverlayVisible}
         onGridOverlayChange={onGridOverlayChange}
+        onBusinessLineChange={onBusinessLineChange}
       />
       <Layout>
         <KlookBenchSidebar
