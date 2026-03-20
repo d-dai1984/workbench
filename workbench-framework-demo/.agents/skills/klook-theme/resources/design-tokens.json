@@ -1,0 +1,55 @@
+{
+  "color": {
+    "primary": "#FF5B00",
+    "primaryHover": "#FF7A45",
+    "primaryActive": "#D4380D",
+    "primaryBg": "#FFF2E8",
+    "primaryBgHover": "#FFD8BF",
+    "primaryBorder": "#FFBB96",
+    "primaryBorderHover": "#FF8C4D",
+    "success": "#00B33C",
+    "successBg": "#E6FFFB",
+    "warning": "#FFB800",
+    "warningBg": "#FFFBE6",
+    "error": "#FF4D4F",
+    "errorBg": "#FFF2F0",
+    "info": "#1E90FF",
+    "infoBg": "#E6F4FF",
+    "textPrimary": "rgba(38,38,38,0.88)",
+    "textSecondary": "rgba(38,38,38,0.45)",
+    "textDisabled": "rgba(38,38,38,0.25)",
+    "border": "#F0F0F0",
+    "borderSecondary": "#D9D9D9",
+    "bgBase": "#FFFFFF",
+    "bgLayout": "#FAFAFA",
+    "bgElevated": "#FFFFFF"
+  },
+  "radius": {
+    "xs": 2,
+    "sm": 4,
+    "md": 6,
+    "lg": 8
+  },
+  "spacing": {
+    "xs": 4,
+    "sm": 8,
+    "md": 16,
+    "lg": 24,
+    "xl": 32,
+    "xxl": 48
+  },
+  "shadow": {
+    "none": "none",
+    "light": "0 1px 2px rgba(0,0,0,0.03), 0 1px 6px -1px rgba(0,0,0,0.02)",
+    "medium": "0 6px 16px rgba(0,0,0,0.08)",
+    "heavy": "0 12px 40px rgba(0,0,0,0.12)"
+  },
+  "typography": {
+    "fontFamily": "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
+    "h2": { "size": 30, "weight": 700 },
+    "h4": { "size": 20, "weight": 600 },
+    "h5": { "size": 16, "weight": 600 },
+    "body": { "size": 14, "weight": 400 },
+    "caption": { "size": 12, "weight": 400 }
+  }
+}
