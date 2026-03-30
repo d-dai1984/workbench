@@ -1,0 +1,302 @@
+/* ─── Variables ─── */
+.pp-demo {
+  --pp-accent: var(--klook-bench-color-primary, #1677ff);
+  --pp-accent-bg: #E6F4FF;
+}
+
+.pp-demo-header {
+  margin-bottom: 16px;
+}
+
+.pp-demo-tags {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.pp-pattern-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* ─── Page container ─── */
+.pp-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.pp-page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+/* ─── Skeleton block ─── */
+.pp-block {
+  background: rgba(0, 0, 0, 0.06);
+  flex-shrink: 0;
+}
+
+/* ─── Input skeleton ─── */
+.pp-input {
+  height: 36px;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: rgba(0, 0, 0, 0.02);
+}
+
+/* ─── Button skeleton ─── */
+.pp-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  padding: 0 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  color: rgba(0, 0, 0, 0.65);
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  white-space: nowrap;
+  cursor: default;
+}
+
+.pp-btn--primary {
+  background: var(--pp-accent);
+  color: #fff;
+  border-color: var(--pp-accent);
+}
+
+.pp-btn--danger {
+  background: #fff;
+  color: #ff4d4f;
+  border-color: #ffa39e;
+}
+
+/* ─── Annotation ─── */
+.pp-annotation {
+  font-size: 12px;
+  color: var(--pp-accent);
+  background: var(--pp-accent-bg);
+  padding: 6px 12px;
+  border-radius: 6px;
+  border-left: 3px solid var(--pp-accent);
+}
+
+/* ─── Form field ─── */
+.pp-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* ─── Filter bar ─── */
+.pp-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pp-search-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.04);
+  flex: 1;
+  max-width: 400px;
+}
+
+/* ─── Table ─── */
+.pp-table-head {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.pp-table-data-row {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.pp-table-cell {
+  flex: 1;
+  min-width: 0;
+}
+
+.pp-table-cell--actions {
+  flex: 0 0 auto;
+  text-align: right;
+}
+
+/* ─── Card List ─── */
+.pp-cardlist-header {
+  display: flex;
+  align-items: center;
+  padding: 8px 16px;
+  gap: 16px;
+}
+
+.pp-cardlist-header > * {
+  flex: 1;
+}
+
+.pp-cardlist-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.pp-cardlist-row > * {
+  flex: 1;
+}
+
+.pp-cardlist-children {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-left: 16px;
+}
+
+.pp-cardlist-child {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ─── Chart area ─── */
+.pp-chart-area {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  height: 180px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.pp-chart-bar-real {
+  flex: 1;
+  background: linear-gradient(180deg, var(--pp-accent) 0%, rgba(22, 119, 255, 0.15) 100%);
+  border-radius: 4px 4px 0 0;
+  min-width: 12px;
+}
+
+/* ─── Task row ─── */
+.pp-task-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ─── Footer bar ─── */
+.pp-footer-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 24px;
+  background: #fff;
+  border-radius: 16px;
+  border: 1px dashed rgba(0, 0, 0, 0.15);
+}
+
+/* ─── Config layout ─── */
+.pp-config-layout {
+  display: flex;
+  gap: 24px;
+}
+
+.pp-config-nav {
+  width: 160px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  position: sticky;
+  top: 80px;
+  align-self: flex-start;
+}
+
+.pp-config-nav-item {
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  color: rgba(0, 0, 0, 0.65);
+  cursor: default;
+  border-left: 2px solid transparent;
+}
+
+.pp-config-nav-item--active {
+  color: var(--pp-accent);
+  font-weight: 600;
+  background: var(--pp-accent-bg);
+  border-left-color: var(--pp-accent);
+}
+
+.pp-config-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.pp-config-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 12px 0;
+}
+
+.pp-config-row:not(:last-child) {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.pp-config-row-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* ─── Toggle ─── */
+.pp-toggle {
+  width: 40px;
+  height: 22px;
+  border-radius: 11px;
+  background: rgba(0, 0, 0, 0.15);
+  position: relative;
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+
+.pp-toggle--on {
+  background: var(--pp-accent);
+}
+
+.pp-toggle-handle {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  transition: left 0.2s;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+
+.pp-toggle--on .pp-toggle-handle {
+  left: 20px;
+}

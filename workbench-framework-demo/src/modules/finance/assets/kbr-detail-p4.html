@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Finance Workbench — Review &amp; Submit</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/antd@5.22.2/dist/reset.css">
+<script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/customParseFormat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/weekday.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/localeData.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/weekOfYear.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/weekYear.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/advancedFormat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/quarterOfYear.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/antd@5.22.2/dist/antd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.24.7/babel.min.js"></script>
+<style>
+  body { margin:0; background:#f5f5f5; }
+  .sider-inner { display:flex; flex-direction:column; align-items:center; padding:12px 0; gap:4px; height:100%; }
+  .sider-btn { width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#94a3b8; cursor:pointer; font-size:16px; border:none; background:transparent; }
+  .sider-btn:hover { background:#112240; color:#e2e8f0; }
+  .sider-btn.active { background:#1677ff; color:#fff; }
+  .topnav { background:#fff; border-bottom:1px solid #f0f0f0; height:52px; display:flex; align-items:center; justify-content:space-between; padding:0 24px; flex-shrink:0; }
+  .topnav-logo { font-size:15px; font-weight:700; color:#1e293b; }
+  .back-bar { background:#fff; padding:8px 24px 0; flex-shrink:0; }
+  .identity-bar { background:#fafafa; border-top:1px solid #f0f0f0; border-bottom:1px solid #f0f0f0; padding:9px 24px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+  .steps-bar { background:#fff; border-bottom:1px solid #f0f0f0; padding:14px 32px; flex-shrink:0; }
+  .global-bar { background:#fff; border-bottom:1px solid #f0f0f0; padding:8px 24px; display:flex; align-items:center; gap:8px; flex-shrink:0; }
+  .content-area { flex:1; overflow-y:auto; padding:20px 24px; background:#f5f5f5; }
+  .root-layout { height:100vh; overflow:hidden; display:flex; }
+  .main-layout { flex:1; display:flex; flex-direction:column; overflow:hidden; min-width:0; }
+  .section-icon { display:inline-flex; width:20px; height:20px; border-radius:4px; align-items:center; justify-content:center; font-size:11px; font-weight:700; margin-right:6px; }
+  .icon-blue { background:#e6f4ff; color:#1677ff; }
+  .icon-green { background:#f6ffed; color:#52c41a; }
+  .icon-orange { background:#fff7e6; color:#fa8c16; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" data-presets="react">
+const {
+  ConfigProvider, Steps, Table, Tag, Badge, Button, Space, Card, Row, Col,
+  Statistic, Alert, Breadcrumb, Collapse, Select, Input, Typography, Divider,
+  Progress, Modal, Form, Tooltip, Upload, message, Result, InputNumber,
+  Descriptions, Checkbox
+} = antd;
+const { Text, Title } = Typography;
+const { useState, useMemo } = React;
+
+/* ── Demo states ── */
+const DEMO_STATES = {
+  modeA:       { label:'Mode A · Auto Draft',        fx:false, blocked:false, gmReadonly:false, submitted:false },
+  modeBC:      { label:'Mode B/C · Manual Upload',   fx:false, blocked:false, gmReadonly:false, submitted:false },
+  fxRequired:  { label:'CCY Mismatch (FX Required)', fx:true,  blocked:false, gmReadonly:false, submitted:false },
+  pendingIssue:{ label:'Pending Issue (Blocked)',     fx:false, blocked:true,  gmReadonly:false, submitted:false },
+  gmReadonly:  { label:'GM Approved (Read-only)',     fx:false, blocked:false, gmReadonly:true,  submitted:false },
+  submitted:   { label:'Submitted State',             fx:false, blocked:false, gmReadonly:false, submitted:true  },
+};
+
+/* ── Settlement data ── */
+const ACCT_DATA_A = [
+  { key:'1', account:'Activity Revenue',     original:'¥1,920,000', adj:'¥-45,500', total:'¥1,874,500' },
+  { key:'2', account:'Cancellation Deduct',  original:'¥-30,000',   adj:'¥0',       total:'¥-30,000'   },
+  { key:'3', account:'Deposit Offset',       original:'¥0',         adj:'¥-10,000', total:'¥-10,000'   },
+  { key:'4', account:'FX Rounding',          original:'¥0',         adj:'¥10',      total:'¥10'        },
+];
+const ADJ_REASON_DATA = [
+  { key:'1', reason:'Price Discrepancy',          amount:'¥-12,000' },
+  { key:'2', reason:'Cancellation Not Reflected', amount:'¥-45,000' },
+  { key:'3', reason:'FX Rate Correction',         amount:'¥-8,500'  },
+  { key:'4', reason:'Deposit Offset',             amount:'¥-10,000' },
+  { key:'5', reason:'FX Rounding',                amount:'¥10'      },
+];
+
+const ACCT_COLS = [
+  { title:'Account',    dataIndex:'account',  key:'account'  },
+  { title:'Original',   dataIndex:'original', key:'original', align:'right' },
+  { title:'Adjustment', dataIndex:'adj',      key:'adj',      align:'right',
+    render:v=><Text type={v.includes('-')?'danger':'success'}>{v}</Text> },
+  { title:'Total',      dataIndex:'total',    key:'total',    align:'right',
+    render:v=><Text strong>{v}</Text> },
+];
+const ADJ_REASON_COLS = [
+  { title:'Reason', dataIndex:'reason', key:'reason' },
+  { title:'Amount', dataIndex:'amount', key:'amount', align:'right',
+    render:v=><Text type="danger">{v}</Text> },
+];
+
+/* ── Attachments ── */
+const INITIAL_ATTACHMENTS = [
+  { key:'recon',     label:'Reconciliation Draft',   status:'ready',   note:'Auto-generated from Mode A' },
+  { key:'statement', label:'Merchant Statement',      status:'ready',   note:'Uploaded by Hannah Ji' },
+  { key:'invoice',   label:'Tax Invoice',             status:'na',      note:'N/A — JP merchant exempt' },
+  { key:'approval',  label:'GM Approval Screenshot', status:'missing', note:'Required for this KBR' },
+];
+
+/* ─────────────────────────────────────────────
+   Main App
+───────────────────────────────────────────── */
+function App() {
+  const [demoKey,       setDemoKey]       = useState('modeA');
+  const [globalPanel,   setGlobalPanel]   = useState(null);
+  const [fxConfirmed,   setFxConfirmed]   = useState(false);
+  const [fxRate,        setFxRate]        = useState('151.25');
+  const [submitOpen,    setSubmitOpen]    = useState(false);
+  const [attachments,   setAttachments]   = useState(INITIAL_ATTACHMENTS);
+  const [dedReason,     setDedReason]     = useState(null);
+  const [dedAmount,     setDedAmount]     = useState('');
+
+  const demo = DEMO_STATES[demoKey];
+
+  const missingAttach = attachments.filter(a => a.status === 'missing').length;
+  const canSubmit = !demo.blocked && !demo.gmReadonly && !demo.submitted &&
+    (!demo.fx || fxConfirmed) && missingAttach === 0;
+
+  const handleSubmit = () => {
+    setSubmitOpen(false);
+    setDemoKey('submitted');
+    message.success('KBR submitted for approval!');
+  };
+
+  /* Steps */
+  const STEPS = [
+    { title:'Overview' },
+    { title:'Reconciliation' },
+    { title:'Issue Resolution' },
+    { title:'Review & Submit' },
+    { title:'GM Approval' },
+    { title:'Payment Tracking' },
+  ];
+
+  /* Attachment status tag */
+  const attachTag = (status) => {
+    if (status === 'ready')   return <Tag color="success">Ready</Tag>;
+    if (status === 'missing') return <Tag color="error">Missing</Tag>;
+    return <Tag>N/A</Tag>;
+  };
+
+  return (
+    <ConfigProvider theme={{ token:{ fontFamily:'-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif', fontSize:13, borderRadius:6, colorPrimary:'#1677ff' }}}>
+      <div className="root-layout">
+        {/* Sidebar */}
+        <div style={{width:56, background:'#001529', flexShrink:0}}>
+          <div className="sider-inner">
+            <div className="sider-btn active">⌂</div>
+            <div className="sider-btn">⊕</div>
+            <div className="sider-btn">🔔</div>
+            <div style={{flex:1}} />
+            <div className="sider-btn">⚙</div>
+          </div>
+        </div>
+
+        {/* Main */}
+        <div className="main-layout">
+          {/* Top nav */}
+          <div className="topnav">
+            <span className="topnav-logo">Finance Workbench</span>
+            <Space size={12}>
+              <Tag color="processing">AP Ops</Tag>
+              <Space size={6}>
+                <div style={{width:28,height:28,borderRadius:'50%',background:'#1677ff',color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700}}>HJ</div>
+                <span style={{fontSize:13,fontWeight:600}}>Hannah Ji</span>
+              </Space>
+            </Space>
+          </div>
+
+          {/* Back bar */}
+          <div className="back-bar">
+            <Breadcrumb items={[
+              { title:<a href="kbr-list.html">KBR List</a> },
+              { title:'KBR2411088001' },
+              { title:'Review & Submit' },
+            ]} />
+          </div>
+
+          {/* Identity bar */}
+          <div className="identity-bar">
+            <Space size={10}>
+              <Text strong style={{fontSize:15}}>Tokyo Skytree Tours</Text>
+              <Text type="secondary">|</Text>
+              <Text type="secondary" style={{fontSize:13}}>Nov 2024</Text>
+              <Text type="secondary">|</Text>
+              <Tag color="blue" style={{fontSize:11}}>KBR2411088001</Tag>
+              <Tag color="default" style={{fontSize:11}}>Later Settlement</Tag>
+              <Tag color="purple" style={{fontSize:11}}>Based on Merchant</Tag>
+            </Space>
+            <Space size={6}>
+              <Text type="secondary" style={{fontSize:12}}>MID: JP-00341</Text>
+              <Text type="secondary">·</Text>
+              <Text type="secondary" style={{fontSize:12}}>Settlement CCY: JPY</Text>
+              <Text type="secondary">·</Text>
+              <Text type="secondary" style={{fontSize:12}}>156 bookings</Text>
+            </Space>
+          </div>
+
+          {/* Steps bar */}
+          <div className="steps-bar">
+            <Steps
+              size="small"
+              current={3}
+              items={STEPS.map((s,i)=>({
+                title: s.title,
+                status: i < 3 ? 'finish' : i === 3 ? 'process' : 'wait',
+                onClick: ()=>{
+                  const pages = ['kbr-detail-p1.html','kbr-detail-p2.html','kbr-detail-p3.html','kbr-detail-p4.html',null,'kbr-detail-p6.html'];
+                  if (pages[i]) window.location.href = pages[i];
+                },
+                style:{ cursor: ['kbr-detail-p1.html','kbr-detail-p2.html','kbr-detail-p3.html',null,null,'kbr-detail-p6.html'][i] ? 'pointer' : 'default' },
+              }))}
+            />
+          </div>
+
+          {/* Global action bar */}
+          <div className="global-bar">
+            <Button size="small" type={globalPanel==='deduction'?'primary':'default'}
+              onClick={()=>setGlobalPanel(p=>p==='deduction'?null:'deduction')}>
+              💰 Add Deduction
+            </Button>
+            <Button size="small" type={globalPanel==='attachments'?'primary':'default'}
+              onClick={()=>setGlobalPanel(p=>p==='attachments'?null:'attachments')}>
+              📎 Attachments {missingAttach>0 && <Badge count={missingAttach} style={{marginLeft:4}} />}
+            </Button>
+          </div>
+
+          {/* Deduction panel */}
+          {globalPanel === 'deduction' && (
+            <div style={{background:'#fffbe6',borderBottom:'1px solid #ffe58f',padding:'12px 24px',flexShrink:0}}>
+              <Space size={12} wrap>
+                <Text strong style={{fontSize:13}}>Manual Deduction</Text>
+                <Select placeholder="Reason" style={{width:200}} size="small"
+                  options={[{label:'Deposit Offset',value:'deposit'},{label:'Historical AR Offset',value:'ar'}]}
+                  value={dedReason} onChange={setDedReason} />
+                <Input prefix="¥" placeholder="Amount" style={{width:130}} size="small" value={dedAmount} onChange={e=>setDedAmount(e.target.value)} />
+                <Button size="small" type="primary" onClick={()=>{ message.success('Deduction applied'); setGlobalPanel(null); }}>Apply</Button>
+                <Button size="small" onClick={()=>setGlobalPanel(null)}>Cancel</Button>
+              </Space>
+            </div>
+          )}
+
+          {/* Attachments panel */}
+          {globalPanel === 'attachments' && (
+            <div style={{background:'#f0f9ff',borderBottom:'1px solid #bae6fd',padding:'12px 24px',flexShrink:0}}>
+              <Space wrap size={8}>
+                {attachments.map(a=>(
+                  <Tag key={a.key}
+                    color={a.status==='ready'?'success':a.status==='missing'?'error':undefined}
+                    closable={false}
+                    style={{fontSize:12,padding:'4px 8px'}}>
+                    {a.status==='ready'?'✓ ':a.status==='missing'?'✗ ':''}{a.label}
+                  </Tag>
+                ))}
+                <Upload showUploadList={false} beforeUpload={()=>false}>
+                  <Button size="small">+ Upload</Button>
+                </Upload>
+              </Space>
+            </div>
+          )}
+
+          {/* Content area */}
+          <div className="content-area">
+            {/* Demo bar */}
+            <Alert
+              type="warning"
+              style={{marginBottom:16,fontSize:12}}
+              message={
+                <Space wrap size={6}>
+                  <Text strong>Demo State:</Text>
+                  {Object.entries(DEMO_STATES).map(([k,v])=>(
+                    <Button key={k} size="small" type={demoKey===k?'primary':'default'} onClick={()=>setDemoKey(k)}>{v.label}</Button>
+                  ))}
+                </Space>
+              }
+            />
+
+            {/* SUBMITTED STATE */}
+            {demo.submitted ? (
+              <Result
+                status="success"
+                title="KBR Submitted for Approval"
+                subTitle="KBR2411088001 · Tokyo Skytree Tours · Submitted by Hannah Ji · 2024-11-20 14:37"
+                extra={[
+                  <Button type="primary" key="p6" href="kbr-detail-p6.html">Go to Payment Tracking →</Button>,
+                  <Button key="list" href="kbr-list.html">Back to KBR List</Button>,
+                ]}
+              >
+                <Descriptions bordered size="small" column={2}>
+                  <Descriptions.Item label="KBR No.">KBR2411088001</Descriptions.Item>
+                  <Descriptions.Item label="Merchant">Tokyo Skytree Tours</Descriptions.Item>
+                  <Descriptions.Item label="Final Amount">¥1,844,500 JPY</Descriptions.Item>
+                  <Descriptions.Item label="Submitted">2024-11-20 14:37</Descriptions.Item>
+                  <Descriptions.Item label="Approver">AP Manager (Pending)</Descriptions.Item>
+                  <Descriptions.Item label="Status"><Tag color="processing">Pending Approval</Tag></Descriptions.Item>
+                </Descriptions>
+              </Result>
+            ) : (
+              <Row gutter={16} align="top">
+                {/* LEFT */}
+                <Col flex="1" style={{minWidth:0}}>
+
+                  {/* Blocked alert */}
+                  {demo.blocked && (
+                    <Alert type="error" showIcon style={{marginBottom:12}}
+                      message="Pending Issues Blocking Submission"
+                      description="There are unresolved issues in Step 3. Please resolve all issues before submitting." />
+                  )}
+                  {demo.gmReadonly && (
+                    <Alert type="info" showIcon style={{marginBottom:12}}
+                      message="GM Approved — Read-only View"
+                      description="This KBR has been approved by GM. The settlement summary is locked for editing." />
+                  )}
+
+                  {/* Section A: Settlement Amount Breakdown */}
+                  <Card
+                    size="small"
+                    style={{marginBottom:12}}
+                    title={<Space><span className="section-icon icon-blue">A</span><Text strong>Settlement Amount Breakdown</Text><Text type="secondary" style={{fontSize:12}}>All amounts in JPY</Text></Space>}>
+
+                    {/* Final payment box */}
+                    <div style={{background:'#f0f9ff',border:'1px solid #bae6fd',borderRadius:8,padding:'16px 20px',marginBottom:12,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+                      <div>
+                        <Text type="secondary" style={{fontSize:12}}>Final Payment Amount</Text>
+                        <div style={{fontSize:28,fontWeight:800,color:'#1677ff',lineHeight:1.2}}>
+                          {demo.fx ? '¥1,844,500' : '¥1,844,500'}
+                          <Text type="secondary" style={{fontSize:14,fontWeight:400,marginLeft:6}}>JPY</Text>
+                        </div>
+                        <Text type="secondary" style={{fontSize:12}}>
+                          {demo.modeBC ? 'Manual upload mode · awaiting statement' : 'Mode A auto-reconciliation · 156 bookings'}
+                        </Text>
+                      </div>
+                      {demo.fx && (
+                        <div style={{textAlign:'right'}}>
+                          <Text type="secondary" style={{fontSize:12}}>Equivalent in USD</Text>
+                          <div style={{fontSize:20,fontWeight:700,color:fxConfirmed?'#52c41a':'#faad14'}}>
+                            ${fxConfirmed ? (1844500/parseFloat(fxRate||1)).toFixed(2) : '—'}
+                          </div>
+                          {!fxConfirmed && <Tag color="warning">FX rate unconfirmed</Tag>}
+                          {fxConfirmed && <Tag color="success">FX confirmed</Tag>}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* By financial account */}
+                    <div style={{marginBottom:12}}>
+                      <Text type="secondary" style={{fontSize:11,fontWeight:600,letterSpacing:.5,textTransform:'uppercase'}}>By Financial Account</Text>
+                      <Table
+                        dataSource={ACCT_DATA_A}
+                        columns={ACCT_COLS}
+                        size="small"
+                        pagination={false}
+                        style={{marginTop:6}}
+                      />
+                    </div>
+
+                    {/* By adjustment reason */}
+                    <div>
+                      <Text type="secondary" style={{fontSize:11,fontWeight:600,letterSpacing:.5,textTransform:'uppercase'}}>By Adjustment Reason</Text>
+                      <Table
+                        dataSource={ADJ_REASON_DATA}
+                        columns={ADJ_REASON_COLS}
+                        size="small"
+                        pagination={false}
+                        style={{marginTop:6}}
+                        summary={()=>(
+                          <Table.Summary fixed>
+                            <Table.Summary.Row>
+                              <Table.Summary.Cell><Text strong>Total Adjustments</Text></Table.Summary.Cell>
+                              <Table.Summary.Cell align="right"><Text strong type="danger">¥-75,490</Text></Table.Summary.Cell>
+                            </Table.Summary.Row>
+                          </Table.Summary>
+                        )}
+                      />
+                    </div>
+                  </Card>
+
+                  {/* Section B: Attachments */}
+                  <Card
+                    size="small"
+                    style={{marginBottom:12}}
+                    title={
+                      <Space>
+                        <span className="section-icon icon-green">B</span>
+                        <Text strong>Attachments</Text>
+                        {missingAttach > 0 && <Tag color="error">{missingAttach} missing</Tag>}
+                        {missingAttach === 0 && <Tag color="success">All ready</Tag>}
+                      </Space>
+                    }>
+                    <Space direction="vertical" style={{width:'100%'}} size={6}>
+                      {attachments.map(a=>(
+                        <div key={a.key} style={{display:'flex',alignItems:'center',gap:8,padding:'6px 8px',background:'#fafafa',borderRadius:6,border:'1px solid #f0f0f0'}}>
+                          {attachTag(a.status)}
+                          <Text style={{flex:1,fontSize:13}}>{a.label}</Text>
+                          <Text type="secondary" style={{fontSize:12}}>{a.note}</Text>
+                          {a.status === 'missing' && (
+                            <Upload showUploadList={false} beforeUpload={()=>{ setAttachments(prev=>prev.map(x=>x.key===a.key?{...x,status:'ready',note:'Uploaded'}:x)); return false; }}>
+                              <Button size="small" type="primary">Upload</Button>
+                            </Upload>
+                          )}
+                        </div>
+                      ))}
+                    </Space>
+                  </Card>
+
+                  {/* Section C: FX Confirmation (only when fx required) */}
+                  {demo.fx && (
+                    <Card
+                      size="small"
+                      style={{marginBottom:12,borderLeft:fxConfirmed?'4px solid #52c41a':'4px solid #faad14'}}
+                      title={
+                        <Space>
+                          <span className="section-icon icon-orange">C</span>
+                          <Text strong>FX Rate Confirmation</Text>
+                          {!fxConfirmed && <Tag color="warning">Required</Tag>}
+                          {fxConfirmed && <Tag color="success">Confirmed</Tag>}
+                        </Space>
+                      }>
+                      <Alert type="warning" showIcon style={{marginBottom:12,fontSize:12}}
+                        message="Settlement CCY is JPY but payment CCY is USD. Please confirm the exchange rate before submitting." />
+                      <Row gutter={12} align="middle">
+                        <Col span={8}>
+                          <Text type="secondary" style={{fontSize:12}}>JPY → USD Rate</Text>
+                          <Input
+                            prefix="1 USD ="
+                            suffix="JPY"
+                            value={fxRate}
+                            onChange={e=>{ setFxRate(e.target.value); setFxConfirmed(false); }}
+                            style={{marginTop:4}}
+                            size="small"
+                          />
+                          <Text type="secondary" style={{fontSize:11}}>Auto-fetched: 151.25 (mid-market, today)</Text>
+                        </Col>
+                        <Col span={8}>
+                          <Text type="secondary" style={{fontSize:12}}>Payment Amount (USD)</Text>
+                          <div style={{fontSize:22,fontWeight:700,color:'#1677ff',marginTop:4}}>
+                            ${(1844500/parseFloat(fxRate||1)).toFixed(2)}
+                          </div>
+                        </Col>
+                        <Col span={8}>
+                          {!fxConfirmed ? (
+                            <Button type="primary" onClick={()=>setFxConfirmed(true)} style={{marginTop:20}}>
+                              Confirm FX Rate
+                            </Button>
+                          ) : (
+                            <div style={{background:'#f6ffed',border:'1px solid #b7eb8f',borderRadius:6,padding:'8px 12px',textAlign:'center',marginTop:16}}>
+                              <Text strong style={{color:'#52c41a'}}>✓ FX Rate Confirmed</Text>
+                            </div>
+                          )}
+                        </Col>
+                      </Row>
+                    </Card>
+                  )}
+
+                </Col>
+
+                {/* RIGHT */}
+                <Col width={280} style={{flexShrink:0}}>
+
+                  {/* Summary card */}
+                  <Card size="small" title="Settlement Summary" style={{marginBottom:12}}>
+                    <Space direction="vertical" style={{width:'100%'}} size={4}>
+                      {[
+                        ['Gross Settlement','¥1,920,000'],
+                        ['Total Adjustments','¥-75,490'],
+                        ['Deposit Offset','¥-10,000'],
+                      ].map(([label,val])=>(
+                        <div key={label} style={{display:'flex',justifyContent:'space-between',fontSize:12}}>
+                          <Text type="secondary">{label}</Text>
+                          <Text type={val.includes('-')?'danger':'default'}>{val}</Text>
+                        </div>
+                      ))}
+                      <Divider style={{margin:'6px 0'}} />
+                      <div style={{display:'flex',justifyContent:'space-between',fontSize:14}}>
+                        <Text strong>Net Payable</Text>
+                        <Text strong style={{color:'#1677ff'}}>¥1,844,500</Text>
+                      </div>
+                      <div style={{display:'flex',justifyContent:'space-between',fontSize:12}}>
+                        <Text type="secondary">Reconciliation Mode</Text>
+                        <Tag size="small">{demo.modeBC?'B/C':'A'}</Tag>
+                      </div>
+                    </Space>
+                  </Card>
+
+                  {/* Submission checklist */}
+                  <Card size="small" title="Pre-submission Checklist" style={{marginBottom:12}}>
+                    <Space direction="vertical" style={{width:'100%'}} size={4}>
+                      {[
+                        { label:'Issues resolved',      done: !demo.blocked },
+                        { label:'Attachments complete', done: missingAttach === 0 },
+                        { label:'FX rate confirmed',    done: !demo.fx || fxConfirmed },
+                        { label:'GM approved (if req)', done: !demo.gmReadonly },
+                      ].map((c,i)=>(
+                        <div key={i} style={{display:'flex',alignItems:'center',gap:8,fontSize:12}}>
+                          <span style={{color:c.done?'#52c41a':'#d9d9d9',fontSize:14}}>{c.done?'✓':'○'}</span>
+                          <Text style={{color:c.done?'#262626':'#8c8c8c'}}>{c.label}</Text>
+                        </div>
+                      ))}
+                    </Space>
+                    <Divider style={{margin:'10px 0'}} />
+                    <Tooltip title={!canSubmit ? 'Please complete all checklist items first' : ''}>
+                      <Button
+                        type="primary"
+                        block
+                        disabled={!canSubmit}
+                        onClick={()=>setSubmitOpen(true)}>
+                        Submit for Approval →
+                      </Button>
+                    </Tooltip>
+                  </Card>
+
+                  {/* Navigation */}
+                  <Card size="small" title="Navigation">
+                    <Space direction="vertical" style={{width:'100%'}} size={6}>
+                      <Button size="small" block href="kbr-detail-p3.html">← Back to Issue Resolution</Button>
+                      <Button size="small" block href="kbr-detail-p6.html">Go to Payment Tracking →</Button>
+                      <Button size="small" block href="kbr-list.html">Back to KBR List</Button>
+                    </Space>
+                  </Card>
+
+                </Col>
+              </Row>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Submit confirmation modal */}
+      <Modal
+        title="Confirm Submission"
+        open={submitOpen}
+        onOk={handleSubmit}
+        onCancel={()=>setSubmitOpen(false)}
+        okText="Submit KBR"
+        okButtonProps={{type:'primary'}}>
+        <Alert type="info" showIcon style={{marginBottom:12}}
+          message="You are about to submit KBR2411088001 for approval. This action cannot be undone." />
+        <Descriptions bordered size="small" column={1}>
+          <Descriptions.Item label="Merchant">Tokyo Skytree Tours</Descriptions.Item>
+          <Descriptions.Item label="Period">Nov 2024</Descriptions.Item>
+          <Descriptions.Item label="Net Payable"><Text strong style={{color:'#1677ff'}}>¥1,844,500 JPY</Text></Descriptions.Item>
+          <Descriptions.Item label="Approver">AP Manager</Descriptions.Item>
+        </Descriptions>
+        <Alert type="warning" showIcon style={{marginTop:12,fontSize:12}}
+          message="Once submitted, the settlement will be locked. Contact your AP Manager if changes are needed." />
+      </Modal>
+    </ConfigProvider>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

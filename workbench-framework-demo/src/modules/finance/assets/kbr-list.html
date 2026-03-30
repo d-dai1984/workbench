@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Finance Workbench — KBR List</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/antd@5.22.2/dist/reset.css" />
+<style>
+* { box-sizing: border-box; }
+body { margin: 0; }
+.root-layout { height: 100vh; overflow: hidden; }
+.main-layout { display: flex !important; flex-direction: column !important; overflow: hidden !important; height: 100% !important; }
+
+.sider-inner { display:flex; flex-direction:column; align-items:center; height:100%; padding:12px 0; gap:4px; }
+.s-icon { width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; color:rgba(255,255,255,.45); cursor:pointer; transition:all .15s; }
+.s-icon:hover { background:rgba(255,255,255,.1); color:rgba(255,255,255,.7); }
+.s-icon.active { background:#1677ff; color:#fff; }
+.s-icon svg { width:18px; height:18px; }
+
+.topnav { background:#fff !important; border-bottom:1px solid #f0f0f0; height:52px !important; line-height:52px !important; padding:0 24px !important; display:flex !important; align-items:center; justify-content:space-between; flex-shrink:0; }
+.logo { font-size:15px; font-weight:700; color:#141414; text-decoration:none; }
+.user-name { font-size:13px; font-weight:600; line-height:1.4; }
+.user-role { font-size:11px; color:#8c8c8c; line-height:1.4; }
+
+.stats-bar { background:#fff; border-bottom:1px solid #f0f0f0; padding:0 24px; height:50px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+.greeting { font-size:14px; font-weight:600; color:#141414; }
+
+.filter-bar { background:#fff; border-bottom:1px solid #f0f0f0; padding:8px 24px; display:flex; align-items:center; gap:10px; flex-shrink:0; flex-wrap:wrap; }
+.filter-label { font-size:11px; font-weight:700; color:#8c8c8c; text-transform:uppercase; letter-spacing:.05em; white-space:nowrap; }
+
+.urgent-band { background:#fff1f0; border-bottom:1px solid #ffccc7; padding:12px 24px; flex-shrink:0; }
+.urgent-hdr { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+.urgent-dot { width:8px; height:8px; border-radius:50%; background:#ff4d4f; flex-shrink:0; }
+
+.tabs-wrap { flex:1; overflow:hidden; display:flex; flex-direction:column; }
+.main-tabs { height:100%; display:flex; flex-direction:column; overflow:hidden; }
+.main-tabs .ant-tabs-nav { background:#fff; padding-left:24px; flex-shrink:0; margin-bottom:0 !important; }
+.main-tabs .ant-tabs-content-holder { flex:1; overflow-y:auto; background:#f5f5f5; }
+.main-tabs .ant-tabs-content { height:100%; }
+.main-tabs .ant-tabs-tabpane { padding:0; }
+.tab-content { padding:16px 24px 24px; }
+
+.table-card { background:#fff; border-radius:8px; border:1px solid #f0f0f0; overflow:hidden; }
+.table-toolbar { padding:10px 14px; display:flex; align-items:center; gap:10px; border-bottom:1px solid #fafafa; }
+.row-count { margin-left:auto; font-size:12px; color:#8c8c8c; }
+
+/* Row highlight */
+.ant-table-tbody > tr.row-urgent > td { background:#fff1f0 !important; }
+.ant-table-tbody > tr.row-urgent > td:first-child { border-left:3px solid #ff4d4f; }
+.ant-table-tbody > tr.row-action > td { background:#fffbe6 !important; }
+.ant-table-tbody > tr.row-action > td:first-child { border-left:3px solid #faad14; }
+.ant-table-tbody > tr.row-normal > td { opacity:.72; }
+.ant-table-tbody > tr:hover.row-urgent > td { background:#ffe7e7 !important; }
+.ant-table-tbody > tr:hover.row-action > td { background:#fff3cc !important; }
+
+.footer { background:#fff; border-top:1px solid #f0f0f0; height:38px; padding:0 24px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+.footer-dot { width:7px; height:7px; border-radius:50%; background:#52c41a; display:inline-block; margin-right:6px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/customParseFormat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/weekday.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/localeData.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/weekOfYear.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/weekYear.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/advancedFormat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/quarterOfYear.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/antd@5.22.2/dist/antd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.24.7/babel.min.js"></script>
+
+<script type="text/babel" data-presets="react">
+const { useState, useMemo } = React;
+const {
+  Layout, Avatar, Space, Button, Table, Tag, Badge,
+  Input, Select, Tabs, Card, Alert, Segmented, Divider,
+  ConfigProvider, Row, Col, Tooltip
+} = antd;
+
+// ── Data ──────────────────────────────────────────────────────────────
+const STEPS = [
+  { key:'all', label:'All',              num:null },
+  { key:'s1',  label:'KBR Issued',       num:1 },
+  { key:'s2',  label:'Reconciliation',   num:2 },
+  { key:'s3',  label:'Issue Resolution', num:3 },
+  { key:'s4',  label:'Review & Submit',  num:4 },
+  { key:'s5',  label:'Under Review',     num:5 },
+  { key:'s6',  label:'Payment Tracking', num:6 },
+];
+
+const STEP_PAGE = {
+  s1:'kbr-detail-p1.html', s2:'kbr-detail-p2.html',
+  s3:'kbr-detail-p3.html', s4:'kbr-detail-p4.html', s6:'kbr-detail-p6.html'
+};
+
+const MY_KBRS_RAW = {
+  s1: [
+    { merchant:'Sapporo Snow Festival', top:false, kbr:'KBR2411065012', mid:'JP-00512', period:'2024-11-01~2024-11-30', settlementMethod:'Later Settlement', reconMode:'Reconcile with Merchant', origTotal:null,    adjTotal:null,  finalTotal:null,    due:'Apr 08', dueClass:'due-normal',   needsAction:true,  action:'Start →',               actionClass:'' },
+    { merchant:'Nagoya Castle Tours',   top:false, kbr:'KBR2411062015', mid:'JP-00498', period:'2024-11-01~2024-11-30', settlementMethod:'Later Settlement', reconMode:'Reconcile with Merchant', origTotal:null,    adjTotal:null,  finalTotal:null,    due:'Apr 10', dueClass:'due-normal',   needsAction:false, action:'Start →',               actionClass:'gray' },
+  ],
+  s2: [
+    { merchant:'Fuji Mountain Tours',     top:false, kbr:'KBR2411090008', mid:'JP-00389', period:'2024-11-01~2024-11-30', settlementMethod:'Later Settlement', reconMode:'Reconcile with Merchant', origTotal:654800,  adjTotal:0,     finalTotal:654800,  due:'Mar 22', dueClass:'due-soon',    needsAction:true,  action:'Upload Statement →',    actionClass:'' },
+    { merchant:'Shibuya Sky Observatory', top:false, kbr:'KBR2411087009', mid:'JP-00401', period:'2024-11-01~2024-11-30', settlementMethod:'Later Settlement', reconMode:'Reconcile with Merchant', origTotal:421500,  adjTotal:0,     finalTotal:421500,  due:'Mar 28', dueClass:'due-normal',  needsAction:false, action:'View Status →',         actionClass:'gray' },
+    { merchant:'Hiroshima Peace Tours',   top:false, kbr:'KBR2411078010', mid:'JP-00376', period:'2024-11-01~2024-11-30', settlementMethod:'Later Settlement', reconMode:'Reconcile with Merchant', origTotal:389200,  adjTotal:0,     finalTotal:389200,  due:'Apr 05', dueClass:'due-normal',  needsAction:false, action:'Send Reminder →',       actionClass:'gray' },
+  ],
+  s3: [
+    { merchant:'Tokyo Skytree Tours',  top:true,  kbr:'KBR2411088001', mid:'JP-00341', period:'2024-11-01~2024-11-30', settlementMethod:'Later Settlement', reconMode:'Reconcile with Merchant', origTotal:1845200, adjTotal:-700,  finalTotal:1844500, due:'Mar 20', dueClass:'due-overdue', needsAction:true,  action:'Review →',              actionClass:'' },
+    { merchant:'Kyoto Rail Pass Co.',  top:false, kbr:'KBR2411076002', mid:'JP-00298', period:'2024-11-01~2024-11-30', settlementMethod:'Later Settlement', reconMode:'Reconcile with Merchant', origTotal:728400,  adjTotal:-2100, finalTotal:726300,  due:'Mar 25', dueClass:'due-normal',  needsAction:true,  action:'Send Reminder →',       actionClass:'orange' },
+    { merchant:'Hakone Ropeway',       top:false, kbr:'KBR2411079004', mid:'JP-00317', period:'2024-11-01~2024-11-30', settlementMethod:'Later Settlement', reconMode:'Reconcile with Merchant', origTotal:512000,  adjTotal:0,     finalTotal:512000,  due:'Mar 27', dueClass:'due-normal',  needsAction:false, action:'View →',                actionClass:'gray' },
+    { merchant:'Osaka Aquarium',       top:false, kbr:'KBR2411081006', mid:'JP-00329', period:'2024-11-01~2024-11-30', settlementMethod:'Later Settlement', reconMode:'Based on Klook',          origTotal:634800,  adjTotal:0,     finalTotal:634800,  due:'Mar 29', dueClass:'due-normal',  needsAction:false, action:'Send Reminder →',       actionClass:'gray' },
+  ],
+  s4: [
+    { merchant:'Universal Studios Japan', top:true,  kbr:'KBR2411092005', mid:'JP-00421', period:'2024-11-01~2024-11-30', settlementMethod:'Later Settlement', reconMode:'Reconcile with Merchant', origTotal:3210000, adjTotal:0,     finalTotal:3210000, due:'Mar 22', dueClass:'due-soon',    needsAction:true,  action:'Upload Invoice →',      actionClass:'' },
+    { merchant:'Nara Deer Park Tours',    top:false, kbr:'KBR2411083007', mid:'JP-00352', period:'2024-11-01~2024-11-30', settlementMethod:'Later Settlement', reconMode:'Reconcile with Merchant', origTotal:892000,  adjTotal:-1500, finalTotal:890500,  due:'Apr 02', dueClass:'due-normal',  needsAction:true,  action:'Submit →',              actionClass:'' },
+  ],
+  s5: [
+    { merchant:'Kinkakuji Garden Tours', top:false, kbr:'KBR2411071018', mid:'JP-00288', period:'2024-11-01~2024-11-30', settlementMethod:'Later Settlement', reconMode:'Reconcile with Merchant', origTotal:456000,  adjTotal:0,     finalTotal:456000,  due:'Apr 04', dueClass:'due-normal',  needsAction:false, action:'View →',                actionClass:'gray' },
+  ],
+  s6: [
+    { merchant:'teamLab Planets', top:true,  kbr:'KBR2411085003', mid:'JP-00361', period:'2024-02-01~2024-02-29', settlementMethod:'Later Settlement', reconMode:'Reconcile with Merchant', origTotal:892400,  adjTotal:0,     finalTotal:892400,  due:'Overdue', dueClass:'due-overdue', needsAction:true,  action:'Handle Failure →',      actionClass:'' },
+  ],
+};
+
+const EXTRA_ALL = {
+  s1: [
+    { merchant:'Osaka Castle Tours',  top:false, kbr:'KBR2411060020', mid:'JP-00475', period:'2024-11-01~2024-11-30', settlementMethod:'Later Settlement', reconMode:'Reconcile with Merchant', origTotal:null, adjTotal:null, finalTotal:null, due:'Apr 12', dueClass:'due-normal', needsAction:false, action:'View →', actionClass:'gray', assignee:'Tom Kim' },
+    { merchant:'Naha Harbor Cruises', top:false, kbr:'KBR2411058021', mid:'JP-00461', period:'2024-11-01~2024-11-30', settlementMethod:'Later Settlement', reconMode:'Reconcile with Merchant', origTotal:null, adjTotal:null, finalTotal:null, due:'Apr 14', dueClass:'due-normal', needsAction:false, action:'View →', actionClass:'gray', assignee:'Amy Chen' },
+  ],
+  s2: [
+    { merchant:'Nikko Toshogu Tours', top:false, kbr:'KBR2411082013', mid:'JP-00344', period:'2024-11-01~2024-11-30', settlementMethod:'Later Settlement', reconMode:'Reconcile with Merchant', origTotal:318600, adjTotal:0, finalTotal:318600, due:'Mar 26', dueClass:'due-normal', needsAction:false, action:'View →', actionClass:'gray', assignee:'Amy Chen' },
+    { merchant:'Kamakura Day Trip',   top:false, kbr:'KBR2411075015', mid:'JP-00302', period:'2024-11-01~2024-11-30', settlementMethod:'Later Settlement', reconMode:'Based on Klook',          origTotal:276400, adjTotal:0, finalTotal:276400, due:'Mar 30', dueClass:'due-normal', needsAction:false, action:'View →', actionClass:'gray', assignee:'Tom Kim' },
+  ],
+  s3: [
+    { merchant:'Naha Harbor Cruises', top:false, kbr:'KBR2411071008', mid:'JP-00461', period:'2024-11-01~2024-11-30', settlementMethod:'Later Settlement', reconMode:'Reconcile with Merchant', origTotal:489300, adjTotal:0,    finalTotal:489300, due:'Mar 26', dueClass:'due-normal', needsAction:false, action:'View →', actionClass:'gray', assignee:'Amy Chen' },
+    { merchant:'Arashiyama Bamboo',   top:false, kbr:'KBR2411068011', mid:'JP-00271', period:'2024-11-01~2024-11-30', settlementMethod:'Later Settlement', reconMode:'Reconcile with Merchant', origTotal:567200, adjTotal:-800, finalTotal:566400, due:'Mar 28', dueClass:'due-normal', needsAction:false, action:'View →', actionClass:'gray', assignee:'Tom Kim' },
+  ],
+  s4: [
+    { merchant:'Arashiyama Bamboo', top:false, kbr:'KBR2411069014', mid:'JP-00271', period:'2024-11-01~2024-11-30', settlementMethod:'Later Settlement', reconMode:'Reconcile with Merchant', origTotal:567200, adjTotal:-800, finalTotal:566400, due:'Mar 29', dueClass:'due-normal', needsAction:false, action:'View →', actionClass:'gray', assignee:'Amy Chen' },
+    { merchant:'Sapporo Snow Park',  top:false, kbr:'KBR2411055017', mid:'JP-00218', period:'2024-11-01~2024-11-30', settlementMethod:'Later Settlement', reconMode:'Reconcile with Merchant', origTotal:1124000,adjTotal:0,   finalTotal:1124000,due:'Apr 01', dueClass:'due-normal', needsAction:false, action:'View →', actionClass:'gray', assignee:'Tom Kim' },
+  ],
+  s5: [
+    { merchant:'Okinawa Dive Tours',  top:false, kbr:'KBR2411058023', mid:'JP-00466', period:'2024-11-01~2024-11-30', settlementMethod:'Later Settlement', reconMode:'Reconcile with Merchant', origTotal:732800, adjTotal:0, finalTotal:732800, due:'Apr 06', dueClass:'due-normal', needsAction:false, action:'View →', actionClass:'gray', assignee:'Amy Chen' },
+    { merchant:'Nagasaki Peace Park', top:false, kbr:'KBR2411052025', mid:'JP-00195', period:'2024-11-01~2024-11-30', settlementMethod:'Later Settlement', reconMode:'Reconcile with Merchant', origTotal:298500, adjTotal:0, finalTotal:298500, due:'Apr 08', dueClass:'due-normal', needsAction:false, action:'View →', actionClass:'gray', assignee:'Tom Kim' },
+  ],
+  s6: [
+    { merchant:'Yokohama Bay Tours', top:false, kbr:'KBR2411062019', mid:'JP-00248', period:'2024-11-01~2024-11-30', settlementMethod:'Later Settlement', reconMode:'Reconcile with Merchant', origTotal:641200, adjTotal:0, finalTotal:641200, due:'Mar 23', dueClass:'due-soon',  needsAction:false, action:'View →', actionClass:'gray', assignee:'Tom Kim' },
+    { merchant:'Sendai Castle Park', top:false, kbr:'KBR2411048022', mid:'JP-00182', period:'2024-10-01~2024-10-31', settlementMethod:'Later Settlement', reconMode:'Reconcile with Merchant', origTotal:412600, adjTotal:0, finalTotal:412600, due:'Mar 30', dueClass:'due-normal', needsAction:false, action:'View →', actionClass:'gray', assignee:'Amy Chen' },
+  ],
+};
+
+// Build MY_KBRS and ALL_KBRS
+const MY_KBRS = {}, ALL_KBRS = {};
+['s1','s2','s3','s4','s5','s6'].forEach(k => {
+  MY_KBRS[k]  = MY_KBRS_RAW[k].map((r,i) => ({ ...r, step:k, assignee:null, _key:`${k}-${i}` }));
+  ALL_KBRS[k] = [
+    ...MY_KBRS_RAW[k].map((r,i) => ({ ...r, step:k, assignee:null, _key:`${k}-my-${i}` })),
+    ...(EXTRA_ALL[k]||[]).map((r,i) => ({ ...r, step:k, _key:`${k}-ex-${i}` })),
+  ];
+});
+['s1','s2','s3','s4','s5','s6'].forEach(k => {
+  MY_KBRS.all  = [...(MY_KBRS.all||[]),  ...MY_KBRS[k]];
+  ALL_KBRS.all = [...(ALL_KBRS.all||[]), ...ALL_KBRS[k]];
+});
+
+const URGENT_ITEMS = [
+  { merchant:'Tokyo Skytree Tours',    top:true,  kbr:'KBR2411088001', period:'Nov 2024 · Step 3', status:'BD conclusion ready to confirm', dueLabel:'Due in 2 days', urgency:'red',   href:'kbr-detail-p3.html', action:'Review →' },
+  { merchant:'Universal Studios Japan',top:true,  kbr:'KBR2411092005', period:'Nov 2024 · Step 4', status:'Invoice not uploaded — blocked',  dueLabel:'Due in 4 days', urgency:'amber', href:'kbr-detail-p4.html', action:'Upload →' },
+  { merchant:'teamLab Planets',        top:true,  kbr:'KBR2411085003', period:'Feb 2024 · Step 6', status:'Bank return — account mismatch',  dueLabel:'Overdue',        urgency:'red',   href:'kbr-detail-p6.html', action:'Handle →' },
+];
+
+// ── Helpers ────────────────────────────────────────────────────────────
+const fmtAmt = (v, adj=false) => {
+  if (v === null || v === undefined) return <span style={{color:'#bfbfbf',fontSize:11}}>—</span>;
+  if (v === 0) return <span style={{color:'#bfbfbf'}}>0</span>;
+  const color = adj ? (v < 0 ? '#ff4d4f' : '#52c41a') : '#141414';
+  const prefix = (adj && v > 0) ? '+' : '';
+  return <span style={{color,fontVariantNumeric:'tabular-nums',fontSize:12,fontWeight:600}}>{prefix}{Math.abs(v).toLocaleString()}</span>;
+};
+
+const stepTagColor = { s1:'default', s2:'processing', s3:'blue', s4:'success', s5:'purple', s6:'warning' };
+const stepLabel    = { s1:'1·Overview', s2:'2·Recon', s3:'3·Issues', s4:'4·Submit', s5:'5·Approval', s6:'6·Payment' };
+
+// ── Main App ───────────────────────────────────────────────────────────
+const App = () => {
+  const [mode,       setMode]       = useState('mine');
+  const [activeStep, setActiveStep] = useState('s3');
+  const [subFilter,  setSubFilter]  = useState('action');
+  const [filterMid,  setFilterMid]  = useState('');
+  const [filterKbr,  setFilterKbr]  = useState('');
+  const [filterSet,  setFilterSet]  = useState('');
+  const [filterRec,  setFilterRec]  = useState('');
+
+  const sourceData = useMemo(() => mode === 'mine' ? MY_KBRS : ALL_KBRS, [mode]);
+
+  const filteredData = useMemo(() => {
+    const result = {};
+    Object.keys(sourceData).forEach(k => {
+      result[k] = sourceData[k].filter(r => {
+        if (filterMid && !r.mid.toLowerCase().includes(filterMid.toLowerCase())) return false;
+        if (filterKbr && !r.kbr.toLowerCase().includes(filterKbr.toLowerCase())) return false;
+        if (filterSet && r.settlementMethod !== filterSet) return false;
+        if (filterRec && r.reconMode !== filterRec) return false;
+        return true;
+      });
+    });
+    return result;
+  }, [sourceData, filterMid, filterKbr, filterSet, filterRec]);
+
+  const tabCounts = useMemo(() => {
+    const c = {};
+    STEPS.forEach(s => {
+      const rows = filteredData[s.key] || [];
+      c[s.key] = { total: rows.length, action: rows.filter(r => r.needsAction).length };
+    });
+    return c;
+  }, [filteredData]);
+
+  const hasFilter = filterMid || filterKbr || filterSet || filterRec;
+
+  const switchMode = (m) => { setMode(m); setSubFilter('action'); };
+
+  const handleTabChange = (k) => { setActiveStep(k); setSubFilter('action'); };
+
+  // Stats
+  const stats = mode === 'mine'
+    ? { total:'12 Total', action:'4 Need Action', week:'3 Due This Week', overdue:'1 Overdue' }
+    : { total:'47 Total', action:'18 Need Action', week:'11 Due This Week', overdue:'3 Overdue' };
+
+  const greeting = mode === 'mine' ? 'Good morning, Hannah · Wed Mar 19' : 'All Settlement KBRs — Team Overview';
+
+  // Columns factory
+  const getColumns = (stepKey) => {
+    const isAllMode = mode === 'all';
+    const isAllStep = stepKey === 'all';
+    const cols = [
+      {
+        title: 'KBR No.', dataIndex: 'kbr', key: 'kbr', width: 155,
+        render: v => <code style={{fontSize:11.5,fontWeight:600,color:'#374151'}}>{v}</code>
+      },
+      {
+        title: 'Merchant', key: 'merchant', minWidth: 200,
+        render: (_, r) => (
+          <Space size={4} wrap={false}>
+            <span style={{color:'#8c8c8c',fontSize:11.5}}>{r.mid}</span>
+            <span style={{color:'#8c8c8c'}}>·</span>
+            <span style={{fontWeight:600,fontSize:13}}>{r.merchant}</span>
+            {r.top && <Tag color="error" style={{fontSize:10,padding:'0 4px',lineHeight:'16px',margin:0}}>Top</Tag>}
+          </Space>
+        )
+      },
+      ...(isAllMode ? [{
+        title: 'Assignee', key: 'assignee', width: 110,
+        render: (_, r) => r.assignee
+          ? <span style={{color:'#8c8c8c',fontSize:12}}>{r.assignee}</span>
+          : <span style={{color:'#1677ff',fontWeight:600,fontSize:12}}>Hannah Ji</span>
+      }] : []),
+      ...(isAllStep ? [{
+        title: 'Step', key: 'step', width: 130,
+        render: (_, r) => <Tag color={stepTagColor[r.step]}>{stepLabel[r.step]}</Tag>
+      }] : []),
+      {
+        title: 'Period', key: 'period', width: 200,
+        render: (_, r) => {
+          const [s, e] = r.period.split('~');
+          return <div style={{fontFamily:'monospace',fontSize:11,color:'#595959',lineHeight:'1.6'}}>
+            <div>{s}</div><div>~ {e}</div>
+          </div>;
+        }
+      },
+      { title: 'Orig. Total', key:'orig', width:110, align:'right', render:(_, r) => fmtAmt(r.origTotal) },
+      { title: 'Adj. Total',  key:'adj',  width:100, align:'right', render:(_, r) => fmtAmt(r.adjTotal, true) },
+      { title: 'Final Total', key:'fin',  width:110, align:'right',
+        render:(_, r) => <strong style={{fontSize:12}}>{fmtAmt(r.finalTotal)}</strong> },
+      {
+        title: 'Action', key:'action', width:140,
+        render: (_, r) => {
+          const page = STEP_PAGE[r.step || stepKey];
+          const color = r.actionClass === '' ? '#1677ff' : r.actionClass === 'orange' ? '#fa8c16' : '#8c8c8c';
+          if (page) return <a href={page} style={{color,fontWeight:600,fontSize:12,whiteSpace:'nowrap'}}>{r.action}</a>;
+          return <span style={{color,fontWeight:600,fontSize:12,cursor:'pointer'}}>{r.action}</span>;
+        }
+      },
+    ];
+    return cols;
+  };
+
+  // Tab items
+  const tabItems = useMemo(() => STEPS.map(s => {
+    const counts   = tabCounts[s.key] || { total:0, action:0 };
+    const allRows  = filteredData[s.key] || [];
+    const actionRows = allRows.filter(r => r.needsAction);
+    const isMyMode = mode === 'mine';
+    const dispRows = (isMyMode && s.key !== 'all' && subFilter === 'action') ? actionRows : allRows;
+
+    // Badge color for tab
+    let badgeStyle = { backgroundColor:'#d9d9d9' };
+    if (counts.action > 0) badgeStyle = { backgroundColor:'#ff4d4f' };
+    else if (s.key === 's4' && counts.total > 0) badgeStyle = { backgroundColor:'#52c41a' };
+    else if (s.key === 's5' && counts.total > 0) badgeStyle = { backgroundColor:'#8c8c8c' };
+    else if (counts.total > 0) badgeStyle = { backgroundColor:'#1677ff' };
+
+    const tabLabel = (
+      <Space size={6}>
+        {counts.action > 0 && <span style={{width:6,height:6,borderRadius:'50%',background:'#ff4d4f',display:'inline-block',flexShrink:0}} />}
+        <span style={{fontSize:12.5}}>{s.num ? `Step ${s.num} · ${s.label}` : s.label}</span>
+        <Badge count={counts.total} style={{...badgeStyle,boxShadow:'none',fontSize:10,height:16,minWidth:16,lineHeight:'16px'}} />
+      </Space>
+    );
+
+    // Show action strip?
+    const showStrip = isMyMode && s.key !== 'all' && counts.action > 0 && subFilter === 'action';
+
+    const content = (
+      <div className="tab-content">
+        {showStrip && (
+          <Alert
+            type="warning"
+            showIcon={false}
+            style={{marginBottom:12,borderLeft:'3px solid #faad14',borderRadius:6}}
+            message={
+              <Space style={{justifyContent:'space-between',width:'100%'}}>
+                <span style={{fontSize:13,color:'#78350f'}}>
+                  <strong>{counts.action} item{counts.action>1?'s':''} pending your action</strong>
+                  {` in Step ${s.num} · ${s.label}`}
+                </span>
+                <Tag color="warning" style={{fontWeight:700}}>{counts.action}</Tag>
+              </Space>
+            }
+          />
+        )}
+
+        <div className="table-card">
+          <div className="table-toolbar">
+            {isMyMode && s.key !== 'all' && (
+              <Segmented
+                size="small"
+                value={subFilter}
+                onChange={v => setSubFilter(v)}
+                options={[
+                  { label: <Space size={4}><span>Pending My Action</span><Tag color="error" style={{fontSize:10,margin:0}}>{actionRows.length}</Tag></Space>, value:'action' },
+                  { label: <Space size={4}><span>All</span><Tag style={{fontSize:10,margin:0}}>{allRows.length}</Tag></Space>, value:'all' },
+                ]}
+              />
+            )}
+            {isMyMode || (
+              <Select size="small" placeholder="All Assignees" style={{width:140}}
+                options={[{value:'Hannah Ji',label:'Hannah Ji'},{value:'Tom Kim',label:'Tom Kim'},{value:'Amy Chen',label:'Amy Chen'}]}
+                allowClear />
+            )}
+            <span className="row-count">{dispRows.length} result{dispRows.length !== 1 ? 's' : ''}</span>
+          </div>
+          <Table
+            dataSource={dispRows}
+            columns={getColumns(s.key)}
+            rowKey="_key"
+            size="small"
+            pagination={dispRows.length > 15 ? { pageSize:20, size:'small' } : false}
+            rowClassName={r => r.needsAction
+              ? (r.dueClass === 'due-overdue' ? 'row-urgent' : 'row-action')
+              : 'row-normal'}
+            scroll={{ x: 'max-content' }}
+            locale={{ emptyText: <div style={{padding:'32px 0',color:'#8c8c8c',textAlign:'center'}}>
+              {isMyMode && subFilter==='action' ? 'No items pending your action.' : 'No KBRs found.'}
+            </div> }}
+          />
+        </div>
+      </div>
+    );
+
+    return { key: s.key, label: tabLabel, children: content };
+  }), [filteredData, tabCounts, mode, subFilter, activeStep]);
+
+  return (
+    <ConfigProvider theme={{ token: { fontFamily:'-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif', fontSize:13, borderRadius:6, colorPrimary:'#1677ff' } }}>
+      <Layout className="root-layout">
+
+        {/* Sidebar */}
+        <Layout.Sider width={56} theme="dark" style={{background:'#001529',flexShrink:0}} trigger={null} collapsedWidth={56} collapsed>
+          <div className="sider-inner">
+            <div className="s-icon active">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+            </div>
+            <div className="s-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            </div>
+            <div className="s-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            </div>
+            <div style={{marginTop:'auto'}}>
+              <div className="s-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/></svg>
+              </div>
+            </div>
+          </div>
+        </Layout.Sider>
+
+        {/* Main */}
+        <Layout className="main-layout">
+
+          {/* Top Nav */}
+          <div className="topnav">
+            <span className="logo">Finance Workbench</span>
+            <Space size={10}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8c8c8c" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <Avatar size={30} style={{background:'#1677ff',fontSize:11,fontWeight:700,cursor:'pointer'}}>HJ</Avatar>
+              <div>
+                <div className="user-name">Hannah Ji</div>
+                <div className="user-role">Senior Accountant</div>
+              </div>
+            </Space>
+          </div>
+
+          {/* Mode + Stats bar */}
+          <div className="stats-bar">
+            <Space size={14}>
+              <span className="greeting">{greeting}</span>
+              <Space size={0}>
+                <Tag style={{borderRadius:'6px 0 0 6px',margin:0,cursor:'default'}}>{stats.total}</Tag>
+                <Tag color="error"  style={{borderRadius:0,borderLeft:'none',margin:0,cursor:'default'}}>{stats.action}</Tag>
+                <Tag color="warning" style={{borderRadius:0,borderLeft:'none',margin:0,cursor:'default'}}>{stats.week}</Tag>
+                <Tag color="error" style={{borderRadius:'0 6px 6px 0',borderLeft:'none',margin:0,cursor:'default',textDecoration:'underline'}}>{stats.overdue}</Tag>
+              </Space>
+            </Space>
+            <Segmented
+              value={mode}
+              onChange={switchMode}
+              options={[{ label:'My KBRs', value:'mine' }, { label:'All KBRs', value:'all' }]}
+            />
+          </div>
+
+          {/* Filter bar */}
+          <div className="filter-bar">
+            <span className="filter-label">Filter</span>
+            <Input placeholder="MID" size="small" style={{width:100}} value={filterMid}
+              onChange={e => setFilterMid(e.target.value)} allowClear />
+            <Input placeholder="KBR No." size="small" style={{width:150}} value={filterKbr}
+              onChange={e => setFilterKbr(e.target.value)} allowClear />
+            <Divider type="vertical" style={{margin:'0 2px'}} />
+            <Select size="small" placeholder="All Settlement Methods" style={{width:190}}
+              value={filterSet || undefined} onChange={v => setFilterSet(v||'')} allowClear
+              options={[{value:'Later Settlement',label:'Later Settlement'},{value:'Prepayment',label:'Prepayment'}]} />
+            <Select size="small" placeholder="All Reconciliation Methods" style={{width:220}}
+              value={filterRec || undefined} onChange={v => setFilterRec(v||'')} allowClear
+              options={[{value:'Based on Klook',label:'Based on Klook'},{value:'Reconcile with Merchant',label:'Reconcile with Merchant'}]} />
+            {hasFilter && <Tag color="blue" style={{cursor:'default'}}>Filters active</Tag>}
+            {hasFilter && <Button size="small" type="link" onClick={()=>{setFilterMid('');setFilterKbr('');setFilterSet('');setFilterRec('');}}>✕ Clear</Button>}
+            {hasFilter && <span style={{marginLeft:'auto',fontSize:12,color:'#8c8c8c'}}>{(filteredData[activeStep]||[]).length} results</span>}
+          </div>
+
+          {/* Urgent band — My KBRs only */}
+          {mode === 'mine' && (
+            <div className="urgent-band">
+              <div className="urgent-hdr">
+                <div className="urgent-dot" />
+                <span style={{fontSize:13,fontWeight:600,color:'#cf1322'}}>
+                  3 KBRs require immediate attention — top merchants nearing due date
+                </span>
+              </div>
+              <Row gutter={10}>
+                {URGENT_ITEMS.map(item => (
+                  <Col span={8} key={item.kbr}>
+                    <Card size="small" style={{borderLeft:`3px solid ${item.urgency==='red'?'#ff4d4f':'#faad14'}`,borderColor:'#ffccc7',borderRadius:7}} bodyStyle={{padding:'10px 12px'}}>
+                      <Space style={{width:'100%',justifyContent:'space-between'}} align="start">
+                        <div style={{minWidth:0}}>
+                          <div style={{marginBottom:3}}>
+                            <Space size={5} wrap={false}>
+                              <span style={{fontWeight:700,fontSize:13}}>{item.merchant}</span>
+                              {item.top && <Tag color="error" style={{fontSize:10,padding:'0 3px',lineHeight:'16px',margin:0}}>Top</Tag>}
+                            </Space>
+                          </div>
+                          <div style={{fontSize:11,color:'#8c8c8c',marginBottom:3}}>{item.kbr} · {item.period}</div>
+                          <div style={{fontSize:11,color:'#595959'}}>{item.status}</div>
+                        </div>
+                        <div style={{flexShrink:0,textAlign:'right'}}>
+                          <div style={{marginBottom:5}}>
+                            <Tag color={item.urgency==='red'?'error':'warning'} style={{fontSize:11,fontWeight:700}}>{item.dueLabel}</Tag>
+                          </div>
+                          <Button type="primary" size="small" href={item.href}>{item.action}</Button>
+                        </div>
+                      </Space>
+                    </Card>
+                  </Col>
+                ))}
+              </Row>
+            </div>
+          )}
+
+          {/* Tabs + content */}
+          <div className="tabs-wrap">
+            <Tabs
+              activeKey={activeStep}
+              onChange={handleTabChange}
+              items={tabItems}
+              className="main-tabs"
+              destroyInactiveTabPane={false}
+            />
+          </div>
+
+          {/* Footer */}
+          <div className="footer">
+            <div style={{fontSize:12,color:'#8c8c8c'}}>
+              <span className="footer-dot" />
+              Last refreshed: 09:32 AM · Auto-refreshes every 5 min
+            </div>
+            <Button type="link" size="small" style={{color:'#595959',fontSize:12}}>
+              Export {mode==='mine'?'My':'All'} KBRs (Excel) ↓
+            </Button>
+          </div>
+
+        </Layout>
+      </Layout>
+    </ConfigProvider>
+  );
+};
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

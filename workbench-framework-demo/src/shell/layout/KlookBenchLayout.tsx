@@ -22,6 +22,8 @@ export interface KlookBenchLayoutProps {
   gridOverlayVisible?: boolean
   onGridOverlayChange?: (visible: boolean) => void
   onBusinessLineChange?: (key: string) => void
+  activeTheme?: string
+  onThemeChange?: (key: string) => void
   /** Content renderer: (selectedKey, selectedSubKey) => ReactNode */
   children: (selectedKey: string, selectedSubKey: string) => React.ReactNode
 }
@@ -38,6 +40,8 @@ export function KlookBenchLayout({
   gridOverlayVisible,
   onGridOverlayChange,
   onBusinessLineChange,
+  activeTheme,
+  onThemeChange,
   children,
 }: KlookBenchLayoutProps) {
   const firstNavKey = navConfig.groups[0]?.items[0]?.key ?? 'My Bench'
@@ -91,6 +95,8 @@ export function KlookBenchLayout({
         gridOverlayVisible={gridOverlayVisible}
         onGridOverlayChange={onGridOverlayChange}
         onBusinessLineChange={onBusinessLineChange}
+        activeTheme={activeTheme}
+        onThemeChange={onThemeChange}
       />
       <Layout>
         <KlookBenchSidebar

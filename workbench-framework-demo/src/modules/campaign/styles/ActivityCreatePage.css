@@ -1,0 +1,49 @@
+.activity-create {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding-bottom: 80px; /* space for fixed footer */
+}
+
+.activity-create__header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.activity-create__title {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--klook-bench-color-text, rgba(0, 0, 0, 0.88));
+}
+
+.activity-create__steps {
+  padding: 24px;
+  background: var(--klook-bench-color-bg-container, #fff);
+  border-radius: 16px;
+}
+
+.activity-create__content {
+  min-height: 300px;
+}
+
+/* Fixed bottom action bar */
+.activity-create__footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  background: var(--klook-bench-color-bg-container, #fff);
+  border-top: 1px solid var(--klook-bench-color-border, #f0f0f0);
+  padding: 12px 32px;
+}
+
+.activity-create__footer-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}

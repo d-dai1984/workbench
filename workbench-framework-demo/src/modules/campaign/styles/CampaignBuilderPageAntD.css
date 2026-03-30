@@ -1,0 +1,22 @@
+.cpb-antd-page {
+  min-height: 100%;
+}
+
+/* Aligns with global dashboard container convention */
+.cpb-antd-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.cpb-antd-header {
+  margin-bottom: 20px;
+}
+
+.cpb-antd-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--ant-color-border, #f0f0f0);
+}

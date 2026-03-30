@@ -370,13 +370,15 @@
 
 /* ----- ① 展开态（图标+文字）：左右边距 24px ----- */
 .klook-bench-sidebar-inner {
-  padding: 56px 24px 24px 24px;
+  padding: 32px 32px 32px 32px;
   width: 256px;
   min-width: 256px;
   height: 100%;
   display: flex;
   flex-direction: column;
   overflow-y: auto;
+  background: rgba(255, 255, 255, 0.5);
+  border-right: 1px solid var(--klook-bench-color-border-light, #F5F5F5);
   scrollbar-width: none;          /* Firefox */
   -ms-overflow-style: none;       /* IE / Edge */
 }
@@ -423,8 +425,8 @@
   color: rgba(0, 0, 0, 0.25);
 }
 
-.klook-bench-sidebar-menu .ant-menu-item-group:first-of-type {
-  margin-bottom: 64px;
+.klook-bench-sidebar-menu .ant-menu-item-group:not(:last-of-type) {
+  margin-bottom: 32px;
 }
 
 /* ① 展开态菜单项：高度/内边距/圆角/字号等改这里（与收起态一致用 16px，保证图标不横跳） */
@@ -439,17 +441,10 @@
   color: rgba(0, 0, 0, 0.88);
 }
 
-.klook-bench-sidebar-menu .ant-menu-item-group:first-of-type .ant-menu-item {
+.klook-bench-sidebar-menu .ant-menu-item-group .ant-menu-item {
   margin-bottom: 8px;
 }
-.klook-bench-sidebar-menu .ant-menu-item-group:first-of-type .ant-menu-item:last-child {
-  margin-bottom: 0;
-}
-
-.klook-bench-sidebar-menu .ant-menu-item-group:last-of-type .ant-menu-item {
-  margin-bottom: 4px;
-}
-.klook-bench-sidebar-menu .ant-menu-item-group:last-of-type .ant-menu-item:last-child {
+.klook-bench-sidebar-menu .ant-menu-item-group .ant-menu-item:last-child {
   margin-bottom: 0;
 }
 
@@ -494,7 +489,7 @@
   width: 104px !important;
   min-width: 104px !important;
   max-width: 104px !important;
-  padding: 56px 20px 24px 20px;
+  padding: 32px;
 }
 
 .klook-bench-sider.ant-layout-sider-collapsed .klook-bench-sidebar-toggle-wrap {
@@ -503,9 +498,7 @@
 }
 
 .klook-bench-sider.ant-layout-sider-collapsed .klook-bench-sidebar-menu .ant-menu-item-group-title {
-  padding-inline: 0;
-  text-align: center;
-  color: transparent;
+  display: none;
 }
 
 .klook-bench-sider.ant-layout-sider-collapsed .klook-bench-sidebar-menu .ant-menu-title-content {
@@ -523,11 +516,13 @@
   display: flex !important;
   justify-content: center !important;
   align-items: center !important;
-  padding-inline: 12px !important;
+  padding-inline: 0 !important;
   gap: 0 !important;
   min-width: 0;
-  width: 100%;
-  max-width: 100%;
+  width: 40px;
+  height: 40px !important;
+  max-width: 40px;
+  margin-inline: auto !important;
   box-sizing: border-box;
 }
 
@@ -559,11 +554,11 @@
 
 .klook-bench-submenu-panel {
   width: 240px;
-  margin: 32px 0;
+  margin: 0;
   flex-shrink: 0;
   background: #fbfbfb;
-  border: 1px solid #eeeff1;
-  border-radius: 16px;
+  border-right: 1px solid var(--klook-bench-color-border-light, #F5F5F5);
+  border-radius: 0;
   padding: 16px 0;
   display: flex;
   flex-direction: column;

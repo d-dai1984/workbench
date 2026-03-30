@@ -3,9 +3,13 @@
    ============================================================ */
 
 .ds-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
   max-width: 1200px;
+  min-width: 768px;
   margin: 0 auto;
-  padding: 32px 24px 64px;
 }
 
 /* Page Header */

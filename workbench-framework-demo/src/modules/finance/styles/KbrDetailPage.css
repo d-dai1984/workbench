@@ -1,0 +1,143 @@
+/* ─── KBR Detail Page ───────────────────────────────────────────────────────── */
+
+.kbr-detail-page {
+  min-height: 100%;
+}
+
+/* ── Breadcrumb ─────────────────────────────────────────────────────────────── */
+.kbr-breadcrumb {
+  margin-bottom: 10px;
+}
+
+/* ── Identity bar ───────────────────────────────────────────────────────────── */
+.kbr-identity-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 9px 0;
+  border-top: 1px solid var(--ant-color-border-secondary, #f5f5f5);
+  border-bottom: 1px solid var(--ant-color-border-secondary, #f5f5f5);
+  background: var(--ant-color-fill-quaternary, #fafafa);
+  margin-bottom: 0;
+}
+
+.kbr-merchant-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ant-color-text, #141414);
+}
+
+.kbr-period {
+  font-size: 13px;
+  color: var(--ant-color-text-secondary, #595959);
+}
+
+.kbr-sep {
+  color: var(--ant-color-border, #d9d9d9);
+}
+
+/* ── Steps bar ──────────────────────────────────────────────────────────────── */
+.kbr-steps-bar {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--ant-color-border-secondary, #f5f5f5);
+}
+
+/* Prevent step labels from wrapping — clip overflow gracefully */
+.kbr-steps-bar .ant-steps-item-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
+}
+
+/* ── Global actions bar ─────────────────────────────────────────────────────── */
+.kbr-global-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--ant-color-border-secondary, #f5f5f5);
+}
+
+.kbr-global-label {
+  font-size: 11px;
+  color: var(--ant-color-text-quaternary, #bfbfbf);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ── Contextual panel ───────────────────────────────────────────────────────── */
+.kbr-panel {
+  padding: 12px 0;
+  background: var(--ant-color-fill-quaternary, #fafafa);
+  border-bottom: 1px solid var(--ant-color-border-secondary, #f5f5f5);
+}
+
+.kbr-panel-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ant-color-text-secondary, #595959);
+}
+
+/* ── Content area ───────────────────────────────────────────────────────────── */
+.kbr-content {
+  margin-top: 20px;
+}
+
+/* ── Merchant Info collapsible header ───────────────────────────────────────── */
+.kbr-merchant-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px 16px;
+  background: var(--ant-color-fill-quaternary, #fafafa);
+  border-radius: var(--ant-border-radius-lg, 8px);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.kbr-merchant-header:hover {
+  background: var(--ant-color-fill-tertiary, #f0f0f0);
+}
+
+.kbr-merchant-header--open {
+  border-radius: var(--ant-border-radius-lg, 8px) var(--ant-border-radius-lg, 8px) 0 0;
+}
+
+/* ── Transaction table section header ───────────────────────────────────────── */
+.kbr-tx-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+/* ── Right panel column ─────────────────────────────────────────────────────── */
+.kbr-right-col {
+  width: 300px;
+  flex-shrink: 0;
+}
+
+/* ── Issues card left border accent ─────────────────────────────────────────── */
+.kbr-issues-card {
+  border-left: 4px solid #faad14 !important;
+}
+
+/* ── Table row color classes ─────────────────────────────────────────────────── */
+.ant-table-tbody > tr.kbr-tx-fulfillment > td { background: #f6ffed !important; }
+.ant-table-tbody > tr.kbr-tx-return      > td { background: #fff1f0 !important; }
+.ant-table-tbody > tr.kbr-tx-comp        > td { background: #e6f4ff !important; }
+
+/* ── Responsive: collapse right panel at narrower widths ─────────────────────── */
+@media (max-width: 1100px) {
+  .kbr-right-col {
+    width: 100%;
+  }
+}

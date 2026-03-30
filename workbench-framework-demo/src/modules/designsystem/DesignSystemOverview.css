@@ -9,12 +9,6 @@
 }
 
 .dso-hero-title {
-  font-size: 32px;
-  font-weight: 700;
-  background: linear-gradient(135deg, #FF5B00 0%, #FF7A45 50%, #D4380D 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
   margin: 0 0 8px;
 }
 

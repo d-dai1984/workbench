@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Finance Workbench — Reconciliation</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/antd@5.22.2/dist/reset.css" />
+<style>
+* { box-sizing: border-box; }
+body { margin: 0; }
+.root-layout { height: 100vh; overflow: hidden; }
+.main-layout { display:flex !important; flex-direction:column !important; overflow:hidden !important; height:100% !important; }
+.sider-inner { display:flex; flex-direction:column; align-items:center; height:100%; padding:12px 0; gap:4px; }
+.s-icon { width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; color:rgba(255,255,255,.45); cursor:pointer; transition:all .15s; }
+.s-icon:hover { background:rgba(255,255,255,.1); color:rgba(255,255,255,.7); }
+.s-icon.active { background:#1677ff; color:#fff; }
+.s-icon svg { width:18px; height:18px; }
+.topnav { background:#fff !important; border-bottom:1px solid #f0f0f0; height:52px; padding:0 24px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+.user-name { font-size:13px; font-weight:600; line-height:1.4; }
+.user-role { font-size:11px; color:#8c8c8c; line-height:1.4; }
+.back-bar { background:#fff; padding:7px 24px; border-bottom:1px solid #f0f0f0; flex-shrink:0; }
+.identity-bar { background:#fafafa; border-bottom:1px solid #f0f0f0; padding:9px 24px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+.steps-bar { background:#fff; border-bottom:1px solid #f0f0f0; padding:0 24px; flex-shrink:0; }
+.steps-bar .ant-steps { padding:10px 0; }
+.global-bar { background:#fff; border-bottom:1px solid #f0f0f0; padding:6px 24px; display:flex; align-items:center; gap:10px; flex-shrink:0; }
+.global-panel { background:#fafafa; border-bottom:1px solid #f0f0f0; padding:12px 24px; flex-shrink:0; }
+.content-area { flex:1; overflow-y:auto; padding:20px 24px 32px; background:#f5f5f5; }
+
+.mode-card { border:2px solid #f0f0f0; border-radius:8px; padding:14px 16px; cursor:pointer; transition:all .2s; background:#fff; }
+.mode-card:hover { border-color:#bae0ff; }
+.mode-card.selected { border-color:#1677ff; background:#e6f4ff; }
+.mode-card .mode-key { font-size:10px; font-weight:700; color:#8c8c8c; letter-spacing:.1em; margin-bottom:5px; }
+.mode-card.selected .mode-key { color:#1677ff; }
+.mode-card .mode-label { font-size:13px; font-weight:700; color:#141414; margin-bottom:3px; }
+.mode-card .mode-desc { font-size:12px; color:#8c8c8c; }
+
+.upload-zone { border:2px dashed #d9d9d9; border-radius:8px; padding:24px; text-align:center; background:#fafafa; cursor:pointer; transition:all .2s; }
+.upload-zone:hover { border-color:#1677ff; background:#e6f4ff; }
+
+/* Recon result table */
+.ant-table-tbody > tr.disc-klook > td { background:#f6ffed !important; }
+.ant-table-tbody > tr.disc-merchant > td { background:#fff7e6 !important; }
+.ant-table-tbody > tr.disc-missing-k > td { background:#fff1f0 !important; }
+.ant-table-tbody > tr.disc-missing-m > td { background:#e6f4ff !important; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/customParseFormat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/weekday.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/localeData.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/weekOfYear.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/weekYear.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/advancedFormat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/quarterOfYear.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/antd@5.22.2/dist/antd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.24.7/babel.min.js"></script>
+<script type="text/babel" data-presets="react">
+const { useState } = React;
+const { Layout, Avatar, Space, Button, Table, Tag, Card, Alert, Steps, Breadcrumb,
+        Select, Input, Radio, Row, Col, ConfigProvider, Typography, Divider, Upload, Badge } = antd;
+
+// ── Recon result data ──────────────────────────────────────────────────
+const RECON_DATA = [
+  { key:'1', bookingNo:'TYO123450', klookAmt:8200,  merchantAmt:9000,  diff:-800,  status:'discrepancy', decision:'klook',    ticketId:'TASK-BD-001', rowClass:'disc-klook' },
+  { key:'2', bookingNo:'TYO123451', klookAmt:3400,  merchantAmt:3400,  diff:0,     status:'matched',     decision:null,        ticketId:null, rowClass:'' },
+  { key:'3', bookingNo:'TYO123452', klookAmt:-890,  merchantAmt:-890,  diff:0,     status:'matched',     decision:null,        ticketId:null, rowClass:'' },
+  { key:'4', bookingNo:'TYO123453', klookAmt:11800, merchantAmt:12500, diff:-700,  status:'discrepancy', decision:'merchant',  ticketId:'TASK-BD-001', rowClass:'disc-merchant' },
+  { key:'5', bookingNo:'TYO123455', klookAmt:2800,  merchantAmt:null,  diff:null,  status:'missing_m',   decision:null,        ticketId:null, rowClass:'disc-missing-m' },
+  { key:'6', bookingNo:null,        klookAmt:null,   merchantAmt:1500,  diff:null,  status:'missing_k',   decision:null,        ticketId:null, rowClass:'disc-missing-k' },
+];
+
+const SCRUB_DATA = [
+  { key:'1', line:'Line 47',  raw:'TST-XXX-001',  error:'Invalid format — expected 3 letters + 6 digits' },
+  { key:'2', line:'Line 89',  raw:'" TYO123457"', error:'Leading whitespace detected' },
+  { key:'3', line:'Line 112', raw:'TYO12345A',    error:'Non-numeric characters in digits section' },
+];
+
+// ── App ────────────────────────────────────────────────────────────────
+const App = () => {
+  const [reconMode,  setReconMode]  = useState('A');
+  const [subState,   setSubState]   = useState('normal'); // normal|scrubbing|recon-key|multicolumn|no-disc
+  const [reconKey,   setReconKey]   = useState('klook-booking');
+  const [colKey,     setColKey]     = useState('B');
+  const [colAmt,     setColAmt]     = useState('E');
+  const [globalPanel, setGlobalPanel] = useState(null);
+  const [dedReason,  setDedReason]  = useState('');
+  const [dedAmount,  setDedAmount]  = useState('');
+
+  const togglePanel = (p) => setGlobalPanel(prev => prev === p ? null : p);
+  const dedActive = dedReason && dedAmount;
+
+  // Parsing steps based on subState
+  const parseSteps = {
+    'normal': [
+      { title:'File Received',         status:'finish', description:'2024-11-03 08:14' },
+      { title:'Format Conversion',     status:'finish', description:'Converted from PDF to structured table' },
+      { title:'Reconciliation Key',    status:'finish', description:'Key: Klook Booking No. (confirmed)' },
+      { title:'AI Field Mapping',      status:'finish', description:'Booking No. → Col B · Amount → Col C · 156 rows' },
+      { title:'Compliance Validation', status:'finish', description:'156 rows checked · 0 errors' },
+      { title:'Data Scrubbing',        status:'finish', description:'All rows passed · no manual fixes needed' },
+    ],
+    'scrubbing': [
+      { title:'File Received',         status:'finish' },
+      { title:'Format Conversion',     status:'finish', description:'Converted from PDF' },
+      { title:'Reconciliation Key',    status:'finish', description:'Key: Klook Booking No.' },
+      { title:'AI Field Mapping',      status:'finish', description:'156 rows mapped' },
+      { title:'Compliance Validation', status:'error',  description:'3 rows failed Booking No. format check' },
+      { title:'Data Scrubbing',        status:'process',description:'Fix, exclude, or ignore 3 rows to continue' },
+    ],
+    'recon-key': [
+      { title:'File Received',         status:'finish' },
+      { title:'Format Conversion',     status:'finish', description:'Converted from PDF' },
+      { title:'Reconciliation Key',    status:'process',description:'Merchant default loaded — confirm or override' },
+      { title:'AI Field Mapping',      status:'wait' },
+      { title:'Compliance Validation', status:'wait' },
+      { title:'Data Scrubbing',        status:'wait' },
+    ],
+    'multicolumn': [
+      { title:'File Received',         status:'finish' },
+      { title:'Format Conversion',     status:'finish' },
+      { title:'Reconciliation Key',    status:'finish', description:'Key: Merchant Booking No. (overridden)' },
+      { title:'AI Field Mapping',      status:'process',description:'Key column and amount column require manual selection' },
+      { title:'Compliance Validation', status:'wait' },
+      { title:'Data Scrubbing',        status:'wait' },
+    ],
+    'no-disc': [
+      { title:'File Received',         status:'finish' },
+      { title:'Format Conversion',     status:'finish' },
+      { title:'Reconciliation Key',    status:'finish' },
+      { title:'AI Field Mapping',      status:'finish' },
+      { title:'Compliance Validation', status:'finish' },
+      { title:'Data Scrubbing',        status:'finish', description:'All rows passed' },
+    ],
+  };
+
+  const RECON_COLS = [
+    { title:'Booking No.', key:'bk', width:140,
+      render:(_, r) => r.bookingNo
+        ? <code style={{fontSize:11,fontWeight:600}}>{r.bookingNo}</code>
+        : <Tag color="error">Missing from Klook</Tag>
+    },
+    { title:'Klook Amt', dataIndex:'klookAmt', key:'ka', align:'right', width:110,
+      render: v => v == null ? <span style={{color:'#bfbfbf'}}>—</span> : <span style={{fontVariantNumeric:'tabular-nums',fontWeight:600}}>{v.toLocaleString()}</span> },
+    { title:'Merchant Amt', dataIndex:'merchantAmt', key:'ma', align:'right', width:120,
+      render: v => v == null ? <Tag color="blue" style={{fontSize:11}}>Missing from Merchant</Tag> : <span style={{fontVariantNumeric:'tabular-nums',fontWeight:600}}>{v.toLocaleString()}</span> },
+    { title:'Diff', dataIndex:'diff', key:'diff', align:'right', width:90,
+      render: v => v == null ? <span style={{color:'#bfbfbf'}}>—</span> :
+        v === 0 ? <Tag color="success">0</Tag> :
+        <span style={{color: v < 0 ? '#ff4d4f' : '#52c41a', fontWeight:700}}>{v > 0 ? '+' : ''}{v.toLocaleString()}</span>
+    },
+    { title:'Status', dataIndex:'status', key:'st', width:150,
+      render: v => ({
+        matched:    <Tag color="success">Matched</Tag>,
+        discrepancy:<Tag color="warning">Discrepancy</Tag>,
+        missing_k:  <Tag color="error">Missing from Klook</Tag>,
+        missing_m:  <Tag color="processing">Missing from Merchant</Tag>,
+      }[v])
+    },
+    { title:'Decision', dataIndex:'decision', key:'dec', width:150,
+      render: v => !v ? <span style={{color:'#bfbfbf'}}>—</span> :
+        <Tag color={v==='klook'?'blue':'orange'}>{v==='klook'?'Based on Klook':'Based on Merchant'}</Tag>
+    },
+    { title:'Ticket', dataIndex:'ticketId', key:'tid', width:130,
+      render: v => v ? <a style={{fontSize:12,color:'#1677ff'}} href="kbr-detail-p3.html">{v}</a> : <span style={{color:'#bfbfbf'}}>—</span> },
+    { title:'Action', key:'act', width:100,
+      render:(_, r) => r.status !== 'matched'
+        ? <Button size="small" type="link" href="kbr-detail-p3.html">Route →</Button>
+        : null
+    },
+  ];
+
+  const SCRUB_COLS = [
+    { title:'Line',   dataIndex:'line',  key:'l',   width:80, render:v=><span style={{color:'#8c8c8c'}}>{v}</span> },
+    { title:'Raw Value', dataIndex:'raw', key:'r',  width:140, render:v=><code style={{fontSize:11}}>{v}</code> },
+    { title:'Error',  dataIndex:'error', key:'e',   width:280, render:v=><span style={{color:'#ff4d4f',fontSize:12}}>{v}</span> },
+    { title:'Fix',    key:'fix', width:180,
+      render:(_, r) => <Input size="small" defaultValue={r.raw} style={{width:160}} /> },
+    { title:'Action', key:'action', width:200,
+      render:() => (
+        <Space>
+          <Button size="small" danger>Exclude</Button>
+          <Button size="small">Ignore & Reconcile</Button>
+        </Space>
+      )
+    },
+  ];
+
+  const demoButtons = [
+    { key:'normal',      label:'Normal (Results)' },
+    { key:'scrubbing',   label:'Data Scrubbing' },
+    { key:'recon-key',   label:'Recon Key Selection' },
+    { key:'multicolumn', label:'Multi-column' },
+    { key:'no-disc',     label:'No Discrepancy' },
+  ];
+
+  return (
+    <ConfigProvider theme={{ token:{ fontFamily:'-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif', fontSize:13, borderRadius:6, colorPrimary:'#1677ff' }}}>
+      <Layout className="root-layout">
+
+        {/* Sidebar */}
+        <Layout.Sider width={56} theme="dark" style={{background:'#001529',flexShrink:0}} trigger={null} collapsedWidth={56} collapsed>
+          <div className="sider-inner">
+            <div className="s-icon active"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg></div>
+            <div className="s-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+            <div className="s-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+            <div style={{marginTop:'auto'}}>
+              <div className="s-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/></svg></div>
+            </div>
+          </div>
+        </Layout.Sider>
+
+        <Layout className="main-layout">
+          {/* Top Nav */}
+          <div className="topnav">
+            <a href="kbr-list.html" style={{fontWeight:700,fontSize:15,color:'#141414',textDecoration:'none'}}>Finance Workbench</a>
+            <Space size={10}>
+              <Avatar size={30} style={{background:'#1677ff',fontSize:11,fontWeight:700}}>HJ</Avatar>
+              <div><div className="user-name">Hannah Ji</div><div className="user-role">Senior Accountant</div></div>
+            </Space>
+          </div>
+
+          {/* Breadcrumb */}
+          <div className="back-bar">
+            <Breadcrumb items={[{ title:<a href="kbr-list.html" style={{fontSize:13}}>← KBR List</a> }]} />
+          </div>
+
+          {/* Identity bar */}
+          <div className="identity-bar">
+            <Space size={8}>
+              <span style={{fontSize:15,fontWeight:700}}>Tokyo Skytree Tours</span>
+              <span style={{color:'#d9d9d9'}}>·</span>
+              <span style={{fontSize:13,color:'#595959'}}>2024-11-01 ~ 2024-11-30</span>
+              <span style={{color:'#d9d9d9'}}>·</span>
+              <code style={{fontSize:12,color:'#595959'}}>KBR2411088001</code>
+            </Space>
+            <Space size={6}>
+              <Tag color="blue">Later Settlement</Tag>
+              <Tag color="purple">Based on Merchant</Tag>
+            </Space>
+          </div>
+
+          {/* Steps */}
+          <div className="steps-bar">
+            <Steps current={1} size="small" items={[
+              { title:'Overview',         status:'finish',  onClick:()=>location.href='kbr-detail-p1.html', style:{cursor:'pointer'} },
+              { title:'Reconciliation',   status:'process' },
+              { title:'Issue Resolution', status:'wait',    onClick:()=>location.href='kbr-detail-p3.html', style:{cursor:'pointer'} },
+              { title:'Review & Submit',  status:'wait',    onClick:()=>location.href='kbr-detail-p4.html', style:{cursor:'pointer'} },
+              { title:'Approval',         status:'wait' },
+              { title:'Payment Tracking', status:'wait',    onClick:()=>location.href='kbr-detail-p6.html', style:{cursor:'pointer'} },
+            ]} />
+          </div>
+
+          {/* Global Actions Bar */}
+          <div className="global-bar">
+            <span style={{fontSize:11,color:'#8c8c8c',fontWeight:700,textTransform:'uppercase',letterSpacing:'.04em'}}>Global</span>
+            <Button size="small" type={dedActive?'primary':'default'} ghost={dedActive} onClick={()=>togglePanel('deduction')}>
+              − Deduction {dedActive && <Tag color="blue" style={{margin:'0 0 0 4px',fontSize:10}}>−¥{Number(dedAmount.replace(/,/g,'')||0).toLocaleString()}</Tag>}
+            </Button>
+            <Button size="small" onClick={()=>togglePanel('attachments')}>
+              📎 Attachments <Tag color="green" style={{margin:'0 0 0 4px',fontSize:10}}>1/3</Tag>
+            </Button>
+          </div>
+          {globalPanel === 'deduction' && (
+            <div className="global-panel">
+              <Space size={12} wrap>
+                <span style={{fontSize:12,fontWeight:600,color:'#595959'}}>Reason</span>
+                <Select size="small" style={{width:200}} placeholder="— No deduction —" value={dedReason||undefined} onChange={v=>setDedReason(v||'')} allowClear
+                  options={[{value:'deposit',label:'Deposit Offset'},{value:'ar',label:'Historical AR Offset'}]} />
+                <span style={{fontSize:12,fontWeight:600,color:'#595959'}}>Amount (JPY)</span>
+                <Input size="small" style={{width:130}} value={dedAmount} onChange={e=>setDedAmount(e.target.value)} />
+                {dedActive && <Tag color="success">✓ Saved</Tag>}
+              </Space>
+            </div>
+          )}
+          {globalPanel === 'attachments' && (
+            <div className="global-panel">
+              <Space size={8} wrap>
+                <Tag color="success" style={{padding:'4px 10px',fontSize:12}}>✓ Merchant Statement</Tag>
+                <Tag color="warning" style={{padding:'4px 10px',fontSize:12}}>⚠ Invoice — not uploaded</Tag>
+                <Tag style={{padding:'4px 10px',fontSize:12,color:'#8c8c8c'}}>Recon Draft — N/A until Step 4</Tag>
+                <Button size="small" type="dashed">+ Upload file</Button>
+              </Space>
+            </div>
+          )}
+
+          {/* Scrollable content */}
+          <div className="content-area">
+            {/* Demo bar */}
+            <Alert
+              type="warning"
+              style={{marginBottom:16,borderRadius:8}}
+              message={
+                <Space wrap>
+                  <strong>Demo (Mode A sub-states):</strong>
+                  {demoButtons.map(b => (
+                    <Button key={b.key} size="small" type={subState===b.key?'primary':'default'}
+                      onClick={()=>setSubState(b.key)}>{b.label}</Button>
+                  ))}
+                </Space>
+              }
+            />
+
+            <Typography.Title level={4} style={{marginBottom:4}}>Statement &amp; Reconciliation</Typography.Title>
+            <Typography.Text type="secondary" style={{fontSize:13,display:'block',marginBottom:16}}>
+              {subState==='no-disc'
+                ? 'Auto-reconciliation complete — no discrepancies found.'
+                : subState==='normal'
+                ? 'Auto-reconciliation complete — review discrepancies and route each item.'
+                : 'Statement uploaded — action required in parsing pipeline.'}
+            </Typography.Text>
+
+            {/* Mode selector */}
+            <Card size="small" style={{marginBottom:16,borderRadius:8}} styles={{body:{padding:'12px 14px'}}}>
+              <div style={{fontSize:12,fontWeight:700,color:'#8c8c8c',marginBottom:10,textTransform:'uppercase',letterSpacing:'.05em'}}>Reconciliation Mode</div>
+              <Row gutter={10}>
+                {[
+                  { key:'A', label:'Upload & Auto-Reconcile',       desc:'Upload merchant file; system auto-compares booking by booking' },
+                  { key:'B', label:'Manual — Upload Discrepancy File', desc:'Offline reconciliation done; import result file directly' },
+                  { key:'C', label:'Lump-sum Only',                  desc:'Merchant provides total amount only' },
+                ].map(m => (
+                  <Col span={8} key={m.key}>
+                    <div className={`mode-card ${reconMode===m.key?'selected':''}`} onClick={()=>setReconMode(m.key)}>
+                      <div className="mode-key">MODE {m.key}</div>
+                      <div className="mode-label">{m.label}</div>
+                      <div className="mode-desc">{m.desc}</div>
+                    </div>
+                  </Col>
+                ))}
+              </Row>
+              <div style={{marginTop:8,fontSize:12,color:'#fa8c16'}}>⚠ Switching mode will reset the current reconciliation result.</div>
+            </Card>
+
+            {/* ── MODE A ── */}
+            {reconMode === 'A' && (
+              <>
+                {/* Parse section */}
+                <Row gutter={14} style={{marginBottom:16}}>
+                  {/* Statement card */}
+                  <Col span={12}>
+                    <Card size="small" title="Merchant Statement" extra={<Tag color="green">Auto-fetched</Tag>} style={{borderRadius:8,height:'100%'}}>
+                      <Alert
+                        type="success"
+                        showIcon={false}
+                        style={{marginBottom:10,fontSize:12}}
+                        message="✓ Auto-fetched · 2024-11-03 08:14 · From: accounting@tokyoskytree.co.jp"
+                      />
+                      <Card size="small" style={{marginBottom:10,background:'#fafafa'}}>
+                        <Space>
+                          <span style={{fontSize:20}}>📄</span>
+                          <div>
+                            <div style={{fontWeight:600,fontSize:13}}>tokyo_skytree_nov2024_statement.pdf</div>
+                            <div style={{fontSize:11,color:'#8c8c8c'}}>245 KB · 3 pages · Uploaded 2024-11-03</div>
+                          </div>
+                          <Space size={8} style={{marginLeft:'auto'}}>
+                            <Button type="link" size="small">Preview</Button>
+                            <Button type="link" size="small">Download</Button>
+                            <Button type="link" size="small" danger>Void</Button>
+                          </Space>
+                        </Space>
+                      </Card>
+                      <div className="upload-zone" style={{padding:'12px',borderRadius:6}}>
+                        <div style={{fontSize:12,color:'#8c8c8c'}}>Not the right file? Drag &amp; drop or click to upload manually</div>
+                        <div style={{fontSize:11,color:'#bfbfbf'}}>Excel / CSV / PDF</div>
+                      </div>
+                      <div style={{fontSize:11,color:'#8c8c8c',marginTop:6,fontStyle:'italic'}}>Uploading replaces the current statement and re-triggers parsing.</div>
+                    </Card>
+                  </Col>
+
+                  {/* Parsing status */}
+                  <Col span={12}>
+                    <Card size="small" title="Parsing Status" style={{borderRadius:8,height:'100%'}}>
+                      <Steps
+                        direction="vertical"
+                        size="small"
+                        current={parseSteps[subState].findIndex(s=>s.status==='process'||s.status==='error')}
+                        status={parseSteps[subState].some(s=>s.status==='error') ? 'error' : 'process'}
+                        items={parseSteps[subState].map(s => ({
+                          title: s.title,
+                          status: s.status,
+                          description: s.description ? <span style={{fontSize:11}}>{s.description}</span> : undefined,
+                        }))}
+                        style={{maxHeight:260,overflow:'hidden'}}
+                      />
+
+                      {/* Recon key selection (recon-key state) */}
+                      {subState === 'recon-key' && (
+                        <Card size="small" style={{marginTop:10,border:'1px solid #bae0ff',background:'#e6f4ff',borderRadius:8}} styles={{body:{padding:'12px'}}}>
+                          <div style={{fontWeight:700,fontSize:13,marginBottom:4}}>Select Reconciliation Key</div>
+                          <div style={{fontSize:12,color:'#595959',marginBottom:8}}>Merchant default: <strong>Klook Booking No.</strong> — you can override for this KBR only</div>
+                          <Radio.Group value={reconKey} onChange={e=>setReconKey(e.target.value)}>
+                            <Space direction="vertical" size={8}>
+                              {[
+                                { v:'klook-booking', l:'Klook Booking No.', d:'Standard key · system default for this merchant' },
+                                { v:'merchant-booking', l:'Merchant Booking No.', d:"Use merchant's own reference number to match rows" },
+                                { v:'klook-ref', l:'Klook Reference No.', d:"Use Klook's reference/transaction number as the key" },
+                              ].map(opt => (
+                                <Radio key={opt.v} value={opt.v}>
+                                  <div style={{display:'inline-block'}}>
+                                    <div style={{fontWeight:600,fontSize:13}}>{opt.l}</div>
+                                    <div style={{fontSize:11,color:'#8c8c8c'}}>{opt.d}</div>
+                                  </div>
+                                </Radio>
+                              ))}
+                            </Space>
+                          </Radio.Group>
+                          <Button type="primary" size="small" style={{marginTop:10}} onClick={()=>setSubState('normal')}>Confirm &amp; Continue →</Button>
+                        </Card>
+                      )}
+
+                      {/* Multi-column mapping (multicolumn state) */}
+                      {subState === 'multicolumn' && (
+                        <Card size="small" style={{marginTop:10,border:'1px solid #ffe58f',background:'#fffbe6',borderRadius:8}} styles={{body:{padding:'12px'}}}>
+                          <div style={{fontWeight:700,fontSize:13,marginBottom:6}}>Manual Field Mapping Required</div>
+                          <div style={{fontSize:12,color:'#595959',marginBottom:10}}>Reconciliation key is <strong>Merchant Booking No.</strong> — multiple candidate columns detected.</div>
+                          <div style={{fontWeight:600,fontSize:12,marginBottom:6}}>Key Column</div>
+                          <Radio.Group value={colKey} onChange={e=>setColKey(e.target.value)} style={{width:'100%'}}>
+                            <Space direction="vertical" size={4} style={{width:'100%'}}>
+                              {[
+                                { v:'A', l:'Column A — Booking Reference', p:'MB-20241101-0031 / MB-20241102-0047' },
+                                { v:'B', l:'Column B — Merchant Order ID', ai:true, p:'MB-20241101-0031 / MB-20241102-0047' },
+                                { v:'D', l:'Column D — Internal Ref No.', p:'REF-0031 / REF-0047' },
+                              ].map(opt => (
+                                <Radio key={opt.v} value={opt.v}>
+                                  <span style={{fontSize:12,fontWeight:600}}>{opt.l}</span>
+                                  {opt.ai && <Tag color="success" style={{fontSize:10,marginLeft:4}}>AI Suggested</Tag>}
+                                  <div style={{fontSize:11,color:'#8c8c8c',fontFamily:'monospace'}}>{opt.p}</div>
+                                </Radio>
+                              ))}
+                            </Space>
+                          </Radio.Group>
+                          <Divider style={{margin:'8px 0'}} />
+                          <div style={{fontWeight:600,fontSize:12,marginBottom:6}}>Amount Column</div>
+                          <Radio.Group value={colAmt} onChange={e=>setColAmt(e.target.value)}>
+                            <Space direction="vertical" size={4}>
+                              {[
+                                { v:'C', l:'Column C — Settlement Amount (JPY)', p:'1,200 / 3,400 / 890' },
+                                { v:'E', l:'Column E — Net Amount After Tax (JPY)', ai:true, p:'1,080 / 3,060 / 801' },
+                              ].map(opt => (
+                                <Radio key={opt.v} value={opt.v}>
+                                  <span style={{fontSize:12,fontWeight:600}}>{opt.l}</span>
+                                  {opt.ai && <Tag color="success" style={{fontSize:10,marginLeft:4}}>AI Suggested</Tag>}
+                                  <div style={{fontSize:11,color:'#8c8c8c',fontFamily:'monospace'}}>{opt.p}</div>
+                                </Radio>
+                              ))}
+                            </Space>
+                          </Radio.Group>
+                          <Button type="primary" size="small" style={{marginTop:10}} onClick={()=>setSubState('normal')}>Confirm Selections →</Button>
+                        </Card>
+                      )}
+
+                      <div style={{display:'flex',justifyContent:'space-between',marginTop:10,alignItems:'center'}}>
+                        <span style={{fontSize:12,color:'#8c8c8c'}}>Last parsed 2024-11-03</span>
+                        <Button size="small">Re-upload Statement</Button>
+                      </div>
+                    </Card>
+                  </Col>
+                </Row>
+
+                {/* Data Scrubbing panel */}
+                {subState === 'scrubbing' && (
+                  <Card size="small"
+                    title={<Space><Tag color="error">!</Tag><span>Data Scrubbing — 3 rows failed validation</span></Space>}
+                    style={{marginBottom:16,borderLeft:'3px solid #ff4d4f',borderRadius:8}}
+                  >
+                    <div style={{fontSize:12,color:'#595959',marginBottom:10}}>Fix or exclude each row to proceed. You do not need to re-upload the file.</div>
+                    <Table dataSource={SCRUB_DATA} columns={SCRUB_COLS} rowKey="key" size="small" pagination={false} />
+                  </Card>
+                )}
+
+                {/* No-discrepancy state */}
+                {subState === 'no-disc' ? (
+                  <Alert
+                    type="success"
+                    showIcon
+                    style={{marginBottom:16,borderRadius:8,padding:'20px 24px'}}
+                    message={<span style={{fontSize:15,fontWeight:700}}>No Discrepancies Found</span>}
+                    description={
+                      <div>
+                        <div style={{fontSize:13,color:'#141414',marginBottom:8}}>
+                          All 156 bookings matched between Klook and merchant statement. No amount discrepancies, no missing records on either side.
+                        </div>
+                        <div style={{fontSize:12,color:'#595959',marginBottom:12}}>
+                          You can proceed directly to Step 3 to handle any pending compliance issues.
+                        </div>
+                        <Button type="primary" href="kbr-detail-p3.html">Proceed to Issue Resolution →</Button>
+                      </div>
+                    }
+                  />
+                ) : subState === 'normal' && (
+                  /* Reconciliation result table */
+                  <Card size="small" style={{borderRadius:8}} styles={{body:{padding:0}}}
+                    title={
+                      <Space>
+                        <span style={{fontWeight:700}}>Reconciliation Results</span>
+                        <Tag color="warning">2 Discrepancies</Tag>
+                        <Tag color="error">1 Missing from Klook</Tag>
+                        <Tag color="processing">1 Missing from Merchant</Tag>
+                      </Space>
+                    }
+                    extra={
+                      <Space>
+                        <span style={{fontSize:12,color:'#8c8c8c'}}>156 bookings</span>
+                        <Button size="small">Export</Button>
+                        <Button size="small" type="primary" href="kbr-detail-p3.html">Proceed to Issue Resolution →</Button>
+                      </Space>
+                    }
+                  >
+                    <Table
+                      dataSource={RECON_DATA}
+                      columns={RECON_COLS}
+                      rowKey="key"
+                      size="small"
+                      pagination={{ pageSize:10, size:'small' }}
+                      rowClassName={r => r.rowClass}
+                      scroll={{ x:'max-content' }}
+                    />
+                  </Card>
+                )}
+              </>
+            )}
+
+            {/* ── MODE B ── */}
+            {reconMode === 'B' && (
+              <Card size="small" style={{borderRadius:8}} title="Upload Discrepancy File">
+                <Alert
+                  type="info"
+                  style={{marginBottom:14,borderRadius:6}}
+                  message="You have performed reconciliation offline. Upload the result file directly."
+                  description="Required columns: Booking No., Klook Amount, Merchant Amount, Decision (Based on Klook / Based on Merchant / Escalate to BD)"
+                />
+                <div className="upload-zone">
+                  <div style={{fontSize:24,marginBottom:8}}>📁</div>
+                  <div style={{fontSize:14,fontWeight:600,color:'#141414',marginBottom:4}}>Drag &amp; drop your discrepancy file here</div>
+                  <div style={{fontSize:12,color:'#8c8c8c',marginBottom:12}}>Excel (.xlsx) or CSV</div>
+                  <Button type="primary">Browse File</Button>
+                </div>
+                <div style={{fontSize:12,color:'#8c8c8c',marginTop:10,fontStyle:'italic'}}>
+                  The system will validate the file format before processing.
+                </div>
+              </Card>
+            )}
+
+            {/* ── MODE C ── */}
+            {reconMode === 'C' && (
+              <Card size="small" style={{borderRadius:8}} title="Lump-sum Settlement">
+                <Alert
+                  type="info"
+                  style={{marginBottom:14,borderRadius:6}}
+                  message="Merchant provides a total settlement amount only — no booking-level detail."
+                  description="Enter the agreed lump-sum amount. No discrepancy matching will be performed."
+                />
+                <Row gutter={14}>
+                  <Col span={8}>
+                    <div style={{marginBottom:6,fontSize:12,fontWeight:600,color:'#595959'}}>Agreed Settlement Amount (JPY)</div>
+                    <Input size="large" prefix="¥" placeholder="0" style={{width:'100%'}} />
+                  </Col>
+                  <Col span={16}>
+                    <div style={{marginBottom:6,fontSize:12,fontWeight:600,color:'#595959'}}>Note / Reference</div>
+                    <Input placeholder="e.g. Email confirmation ref: TST-2024-11" size="large" />
+                  </Col>
+                </Row>
+                <Button type="primary" style={{marginTop:14}} href="kbr-detail-p3.html">Confirm &amp; Proceed →</Button>
+              </Card>
+            )}
+
+          </div>
+        </Layout>
+      </Layout>
+    </ConfigProvider>
+  );
+};
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

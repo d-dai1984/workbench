@@ -21,6 +21,16 @@
             { "key": "invoice-list", "label": "Invoice List" },
             { "key": "create-invoice", "label": "Create Invoice" }
           ]
+        },
+        {
+          "key": "kbr",
+          "label": "KBR",
+          "icon": "settlement-risk",
+          "children": [
+            { "key": "kbr-list",     "label": "KBR List" },
+            { "key": "kbr-detail",   "label": "KBR Detail (Full)" },
+            { "key": "kbr-skeleton", "label": "KBR Detail (Skeleton)" }
+          ]
         }
       ]
     }

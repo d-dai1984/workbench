@@ -51,3 +51,14 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
+/* ─── Shared layout for skill reference pages ─── */
+.skill-ref-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+  max-width: 1200px;
+  min-width: 768px;
+  margin: 0 auto;
+}
+

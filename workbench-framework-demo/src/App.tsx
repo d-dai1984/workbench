@@ -2,7 +2,16 @@ import { useState } from 'react'
 import { ConfigProvider } from 'antd'
 import { Button, Input, Modal, message } from 'antd'
 import { CloseOutlined, MessageOutlined, SendOutlined } from '@ant-design/icons'
-import { klook2026Theme, ThemeSync } from './shell/theme'
+import { klook2026Theme, klookBenchTheme, klookBench2026Theme, ThemeSync } from './shell/theme'
+
+type ActiveTheme = 'klook' | 'antd' | 'bench'
+const THEME_STORAGE_KEY = 'klook-bench.theme'
+
+const themeMap = {
+  klook: klook2026Theme,
+  antd: klookBenchTheme,
+  bench: klookBench2026Theme,
+}
 import { KlookBenchLayout } from './shell/layout'
 import { defaultMerchantRoleItems, BUSINESS_LINE_KEYS } from './shell/config'
 import type { BusinessLineKey } from './shell/config'
@@ -11,7 +20,8 @@ import { ModuleCard } from './shell/shared/ModuleCard'
 import { DashboardPage, ContentPlaceholder } from './demo/dashboard'
 import { GridPage } from './demo/grid/GridPage'
 import { DesignSystemRouter } from './modules/designsystem/DesignSystemRouter'
-import { PromotionCreativePage } from './modules/campaign'
+import { PromotionCreativePage, CampaignBuilderPage, CampaignBuilderPageAntD, ActivityCreatePage } from './modules/campaign'
+import { KbrDetailPage, KbrDetailPageSkeleton } from './modules/finance'
 import { businessLineNavConfigs } from './modules/registry'
 import './App.css'
 
@@ -43,6 +53,20 @@ function App() {
         window.localStorage.setItem(BIZ_LINE_STORAGE_KEY, bizKey)
       }
       messageApi.success(`Switched to ${defaultMerchantRoleItems.find(i => i.key === bizKey)?.title ?? bizKey}`)
+    }
+  }
+
+  // ---- Theme state ----
+  const [activeTheme, setActiveTheme] = useState<ActiveTheme>(() => {
+    if (typeof window === 'undefined') return 'klook'
+    const saved = window.localStorage.getItem(THEME_STORAGE_KEY)
+    return (saved === 'antd' || saved === 'bench') ? saved as ActiveTheme : 'klook'
+  })
+
+  const handleThemeChange = (key: string) => {
+    if (key === 'klook' || key === 'antd' || key === 'bench') {
+      setActiveTheme(key)
+      if (typeof window !== 'undefined') window.localStorage.setItem(THEME_STORAGE_KEY, key)
     }
   }
 
@@ -110,12 +134,29 @@ function App() {
 
     // Design System pages
     if (businessLine === 'designsystem') {
-      return <DesignSystemRouter sectionKey={selectedKey} />
+      return <DesignSystemRouter sectionKey={selectedKey} activeTheme={activeTheme} />
     }
 
     // Campaign module pages
     if (businessLine === 'campaign' && selectedKey === 'promotion' && selectedSubKey === 'create-promotion') {
       return <PromotionCreativePage />
+    }
+    if (businessLine === 'campaign' && selectedKey === 'campaign' && selectedSubKey === 'create-campaign') {
+      return <CampaignBuilderPage />
+    }
+    if (businessLine === 'campaign' && selectedKey === 'campaign' && selectedSubKey === 'create-campaign-antd') {
+      return <CampaignBuilderPageAntD />
+    }
+    if (businessLine === 'campaign' && selectedKey === 'campaign-deal' && selectedSubKey === 'create-deal') {
+      return <ActivityCreatePage />
+    }
+
+    // Finance module pages
+    if (businessLine === 'finance' && selectedKey === 'kbr' && selectedSubKey === 'kbr-detail') {
+      return <KbrDetailPage />
+    }
+    if (businessLine === 'finance' && selectedKey === 'kbr' && selectedSubKey === 'kbr-skeleton') {
+      return <KbrDetailPageSkeleton />
     }
 
     // Generic placeholder for all other routes
@@ -131,7 +172,7 @@ function App() {
   }
 
   return (
-    <ConfigProvider theme={klook2026Theme}>
+    <ConfigProvider theme={themeMap[activeTheme]}>
       <ThemeSync />
       {contextHolder}
       <KlookBenchLayout
@@ -146,6 +187,8 @@ function App() {
           if (typeof window !== 'undefined') window.localStorage.setItem('klook-bench.grid-overlay', String(v))
         }}
         onBusinessLineChange={handleBusinessLineChange}
+        activeTheme={activeTheme}
+        onThemeChange={handleThemeChange}
       >
         {(selectedKey, selectedSubKey) =>
           showGridPage ? (

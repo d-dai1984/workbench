@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Finance Workbench — Payment Tracking</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/antd@5.22.2/dist/reset.css">
+<script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/customParseFormat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/weekday.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/localeData.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/weekOfYear.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/weekYear.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/advancedFormat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/quarterOfYear.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/antd@5.22.2/dist/antd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.24.7/babel.min.js"></script>
+<style>
+  body { margin:0; background:#f5f5f5; }
+  .sider-inner { display:flex; flex-direction:column; align-items:center; padding:12px 0; gap:4px; height:100%; }
+  .sider-btn { width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#94a3b8; cursor:pointer; font-size:16px; border:none; background:transparent; }
+  .sider-btn:hover { background:#112240; color:#e2e8f0; }
+  .sider-btn.active { background:#1677ff; color:#fff; }
+  .topnav { background:#fff; border-bottom:1px solid #f0f0f0; height:52px; display:flex; align-items:center; justify-content:space-between; padding:0 24px; flex-shrink:0; }
+  .topnav-logo { font-size:15px; font-weight:700; color:#1e293b; }
+  .back-bar { background:#fff; padding:8px 24px 0; flex-shrink:0; }
+  .identity-bar { background:#fafafa; border-top:1px solid #f0f0f0; border-bottom:1px solid #f0f0f0; padding:9px 24px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+  .steps-bar { background:#fff; border-bottom:1px solid #f0f0f0; padding:14px 32px; flex-shrink:0; }
+  .global-bar { background:#fff; border-bottom:1px solid #f0f0f0; padding:8px 24px; display:flex; align-items:center; gap:8px; flex-shrink:0; }
+  .content-area { flex:1; overflow-y:auto; padding:20px 24px; background:#f5f5f5; }
+  .root-layout { height:100vh; overflow:hidden; display:flex; }
+  .main-layout { flex:1; display:flex; flex-direction:column; overflow:hidden; min-width:0; }
+  .row-fail td { background:#fff2f0 !important; }
+  .row-success td { background:#f6ffed !important; }
+  .row-processing td { background:#e6f4ff !important; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" data-presets="react">
+const {
+  ConfigProvider, Steps, Table, Tag, Badge, Button, Space, Card, Row, Col,
+  Statistic, Alert, Breadcrumb, Typography, Divider, Modal, Form, Select,
+  Input, Timeline, Result, Descriptions, message, Tooltip
+} = antd;
+const { Text, Title } = Typography;
+const { useState } = React;
+
+/* ── Demo states ── */
+const DEMO_STATES = {
+  processing:      { label:'Processing',           prStatus:'processing', failureVisible:false, notifyVisible:false, newPrVisible:false, closed:false, paid:false },
+  payment_failure: { label:'Payment Failed',       prStatus:'fail',       failureVisible:true,  notifyVisible:false, newPrVisible:false, closed:false, paid:false },
+  notifying:       { label:'Notifying Merchant',   prStatus:'fail',       failureVisible:true,  notifyVisible:true,  newPrVisible:false, closed:false, paid:false },
+  new_pr:          { label:'New PR Generated',     prStatus:'retry',      failureVisible:true,  notifyVisible:true,  newPrVisible:true,  closed:false, paid:false },
+  paid:            { label:'Payment Confirmed',    prStatus:'success',    failureVisible:false, notifyVisible:false, newPrVisible:false, closed:false, paid:true  },
+  closed:          { label:'Settlement Closed',    prStatus:'success',    failureVisible:false, notifyVisible:false, newPrVisible:false, closed:true,  paid:true  },
+};
+
+/* ── PR data per state ── */
+const PR_ROWS = {
+  processing:      [{ key:'1', no:'PR-2411-00831', amount:'¥1,844,500', ccy:'JPY', submitted:'2024-11-20 15:02', status:'processing', note:'Submitted to bank for processing' }],
+  payment_failure: [{ key:'1', no:'PR-2411-00831', amount:'¥1,844,500', ccy:'JPY', submitted:'2024-11-20 15:02', status:'fail',       note:'Account name mismatch — returned by bank' }],
+  notifying:       [{ key:'1', no:'PR-2411-00831', amount:'¥1,844,500', ccy:'JPY', submitted:'2024-11-20 15:02', status:'fail',       note:'Notification sent to merchant 2024-11-21' }],
+  new_pr:          [
+    { key:'1', no:'PR-2411-00831', amount:'¥1,844,500', ccy:'JPY', submitted:'2024-11-20 15:02', status:'fail',       note:'Account name mismatch — superseded' },
+    { key:'2', no:'PR-2411-00897', amount:'¥1,844,500', ccy:'JPY', submitted:'2024-11-24 09:15', status:'processing', note:'New account ··6883 verified' },
+  ],
+  paid:            [
+    { key:'1', no:'PR-2411-00831', amount:'¥1,844,500', ccy:'JPY', submitted:'2024-11-20 15:02', status:'fail',       note:'Account name mismatch — superseded' },
+    { key:'2', no:'PR-2411-00897', amount:'¥1,844,500', ccy:'JPY', submitted:'2024-11-24 09:15', status:'success',    note:'Bank confirmed 2024-11-25 — payment received' },
+  ],
+  closed:          [
+    { key:'1', no:'PR-2411-00831', amount:'¥1,844,500', ccy:'JPY', submitted:'2024-11-20 15:02', status:'fail',       note:'Superseded' },
+    { key:'2', no:'PR-2411-00897', amount:'¥1,844,500', ccy:'JPY', submitted:'2024-11-24 09:15', status:'success',    note:'Paid — KBR closed 2024-11-26' },
+  ],
+};
+
+/* ── Timeline per state ── */
+const TL_ITEMS = {
+  processing: [
+    { color:'green',  label:'KBR Submitted',         time:'2024-11-20 14:37', desc:'Hannah Ji submitted KBR for approval.' },
+    { color:'green',  label:'AP Manager Approved',   time:'2024-11-20 14:55', desc:'AP Manager approved settlement.' },
+    { color:'blue',   label:'PR-2411-00831 Submitted',time:'2024-11-20 15:02', desc:'Payment request sent to bank.' },
+    { color:'gray',   label:'Awaiting Bank Confirmation', time:'Est. 2024-11-22', desc:'Standard 2-day processing.' },
+  ],
+  payment_failure: [
+    { color:'green',  label:'KBR Submitted',         time:'2024-11-20 14:37', desc:'Hannah Ji submitted.' },
+    { color:'green',  label:'AP Manager Approved',   time:'2024-11-20 14:55', desc:'Approved.' },
+    { color:'green',  label:'PR-2411-00831 Submitted',time:'2024-11-20 15:02', desc:'Sent to bank.' },
+    { color:'red',    label:'Payment Returned',       time:'2024-11-21 08:14', desc:'Bank returned: account name mismatch.' },
+  ],
+  notifying: [
+    { color:'green',  label:'KBR Submitted',         time:'2024-11-20 14:37', desc:'Hannah Ji submitted.' },
+    { color:'green',  label:'AP Manager Approved',   time:'2024-11-20 14:55', desc:'Approved.' },
+    { color:'red',    label:'Payment Returned',       time:'2024-11-21 08:14', desc:'Account name mismatch.' },
+    { color:'blue',   label:'Merchant Notified',      time:'2024-11-21 10:30', desc:'Hannah Ji notified merchant & BD.' },
+    { color:'gray',   label:'Awaiting Merchant Update',time:'—',              desc:'Pending bank account update in portal.' },
+  ],
+  new_pr: [
+    { color:'green',  label:'Payment Returned',       time:'2024-11-21 08:14', desc:'Account name mismatch.' },
+    { color:'green',  label:'Merchant Notified',      time:'2024-11-21 10:30', desc:'Merchant notified.' },
+    { color:'green',  label:'Merchant Updated Account',time:'2024-11-23 16:00',desc:'New account ··6883 verified.' },
+    { color:'blue',   label:'PR-2411-00897 Submitted',time:'2024-11-24 09:15', desc:'New PR submitted with updated account.' },
+    { color:'gray',   label:'Awaiting Confirmation',  time:'Est. 2024-11-26', desc:'2-day processing.' },
+  ],
+  paid: [
+    { color:'green',  label:'PR-2411-00897 Submitted',time:'2024-11-24 09:15', desc:'New PR submitted.' },
+    { color:'green',  label:'Bank Confirmed Payment', time:'2024-11-25 11:22', desc:'¥1,844,500 received by Tokyo Skytree Tours.' },
+    { color:'blue',   label:'Ready to Close',         time:'2024-11-25',       desc:'All conditions met — close settlement.' },
+  ],
+  closed: [
+    { color:'green',  label:'PR-2411-00897 Submitted',time:'2024-11-24 09:15', desc:'New PR submitted.' },
+    { color:'green',  label:'Bank Confirmed Payment', time:'2024-11-25 11:22', desc:'¥1,844,500 received.' },
+    { color:'green',  label:'Settlement Closed',      time:'2024-11-26 09:05', desc:'KBR closed by Hannah Ji. Archived.' },
+  ],
+};
+
+/* ─────────────────────────────────────────────
+   Main App
+───────────────────────────────────────────── */
+function App() {
+  const [demoKey,       setDemoKey]       = useState('processing');
+  const [globalPanel,   setGlobalPanel]   = useState(null);
+  const [notifyOpen,    setNotifyOpen]    = useState(false);
+  const [newPrOpen,     setNewPrOpen]     = useState(false);
+  const [closeOpen,     setCloseOpen]     = useState(false);
+  const [notifyMsg,     setNotifyMsg]     = useState('Hi, the payment for KBR2411088001 (Tokyo Skytree Tours · Nov 2024) was returned by the bank due to an account name mismatch. Please update your bank account details in the Merchant Portal. Ref: PR-2411-00831.');
+
+  const demo    = DEMO_STATES[demoKey];
+  const prRows  = PR_ROWS[demoKey]  || [];
+  const tlItems = TL_ITEMS[demoKey] || [];
+
+  /* PR table columns */
+  const prCols = [
+    { title:'PR No.',      dataIndex:'no',        key:'no',        width:150,
+      render:v=><Text strong style={{fontSize:13}}>{v}</Text> },
+    { title:'Amount',      dataIndex:'amount',    key:'amount',    width:120, align:'right',
+      render:v=><Text strong>{v}</Text> },
+    { title:'CCY',         dataIndex:'ccy',       key:'ccy',       width:60  },
+    { title:'Submitted',   dataIndex:'submitted', key:'submitted', width:150 },
+    { title:'Status',      dataIndex:'status',    key:'status',    width:130,
+      render:v=>({
+        processing:<Tag color="processing">In Transit</Tag>,
+        success:   <Tag color="success">Paid</Tag>,
+        fail:      <Tag color="error">Failed</Tag>,
+        retry:     <Tag color="processing">Retrying</Tag>,
+      }[v] || <Tag>{v}</Tag>) },
+    { title:'Note',        dataIndex:'note',      key:'note',      ellipsis:true },
+  ];
+
+  /* STEPS */
+  const STEPS = [
+    { title:'Overview' },
+    { title:'Reconciliation' },
+    { title:'Issue Resolution' },
+    { title:'Review & Submit' },
+    { title:'GM Approval' },
+    { title:'Payment Tracking' },
+  ];
+
+  /* Panel status */
+  const panelStatusMap = {
+    processing:      { badge:'processing', text:'In Transit',          note:'Est. 2024-11-22' },
+    payment_failure: { badge:'error',      text:'Payment Failed',       note:'Account name mismatch' },
+    notifying:       { badge:'warning',    text:'Awaiting Merchant',    note:'Notification sent 2024-11-21' },
+    new_pr:          { badge:'processing', text:'Retry In Progress',    note:'PR-2411-00897 submitted' },
+    paid:            { badge:'success',    text:'Payment Confirmed',    note:'¥1,844,500 received 2024-11-25' },
+    closed:          { badge:'success',    text:'Settlement Closed',    note:'Archived 2024-11-26' },
+  };
+  const ps = panelStatusMap[demoKey];
+
+  return (
+    <ConfigProvider theme={{ token:{ fontFamily:'-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif', fontSize:13, borderRadius:6, colorPrimary:'#1677ff' }}}>
+      <div className="root-layout">
+        {/* Sidebar */}
+        <div style={{width:56, background:'#001529', flexShrink:0}}>
+          <div className="sider-inner">
+            <div className="sider-btn active">⌂</div>
+            <div className="sider-btn">⊕</div>
+            <div className="sider-btn">🔔</div>
+            <div style={{flex:1}} />
+            <div className="sider-btn">⚙</div>
+          </div>
+        </div>
+
+        {/* Main */}
+        <div className="main-layout">
+          {/* Top nav */}
+          <div className="topnav">
+            <span className="topnav-logo">Finance Workbench</span>
+            <Space size={12}>
+              <Tag color="processing">AP Ops</Tag>
+              <Space size={6}>
+                <div style={{width:28,height:28,borderRadius:'50%',background:'#1677ff',color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700}}>HJ</div>
+                <span style={{fontSize:13,fontWeight:600}}>Hannah Ji</span>
+              </Space>
+            </Space>
+          </div>
+
+          {/* Back bar */}
+          <div className="back-bar">
+            <Breadcrumb items={[
+              { title:<a href="kbr-list.html">KBR List</a> },
+              { title:'KBR2411088001' },
+              { title:'Payment Tracking' },
+            ]} />
+          </div>
+
+          {/* Identity bar */}
+          <div className="identity-bar">
+            <Space size={10}>
+              <Text strong style={{fontSize:15}}>Tokyo Skytree Tours</Text>
+              <Text type="secondary">|</Text>
+              <Text type="secondary" style={{fontSize:13}}>Nov 2024</Text>
+              <Text type="secondary">|</Text>
+              <Tag color="blue" style={{fontSize:11}}>KBR2411088001</Tag>
+              <Tag color="default" style={{fontSize:11}}>Later Settlement</Tag>
+            </Space>
+            <Space size={6}>
+              <Text type="secondary" style={{fontSize:12}}>MID: JP-00341</Text>
+              <Text type="secondary">·</Text>
+              <Text type="secondary" style={{fontSize:12}}>JPY</Text>
+              <Text type="secondary">·</Text>
+              <Badge status={ps.badge} text={ps.text} />
+            </Space>
+          </div>
+
+          {/* Steps bar */}
+          <div className="steps-bar">
+            <Steps
+              size="small"
+              current={5}
+              items={STEPS.map((s,i)=>({
+                title: s.title,
+                status: i < 5 ? 'finish' : 'process',
+                onClick: ()=>{
+                  const pages = ['kbr-detail-p1.html','kbr-detail-p2.html','kbr-detail-p3.html','kbr-detail-p4.html',null,'kbr-detail-p6.html'];
+                  if (pages[i]) window.location.href = pages[i];
+                },
+              }))}
+            />
+          </div>
+
+          {/* Global action bar */}
+          <div className="global-bar">
+            <Button size="small" type={globalPanel==='attachments'?'primary':'default'}
+              onClick={()=>setGlobalPanel(p=>p==='attachments'?null:'attachments')}>
+              📎 Attachments
+            </Button>
+            <Button size="small" href="kbr-detail-p4.html">← Review & Submit</Button>
+          </div>
+
+          {/* Attachments panel */}
+          {globalPanel === 'attachments' && (
+            <div style={{background:'#f0f9ff',borderBottom:'1px solid #bae6fd',padding:'12px 24px',flexShrink:0}}>
+              <Space wrap size={8}>
+                {['✓ Merchant Statement','✓ Recon Draft','Invoice — N/A'].map(f=>(
+                  <Tag key={f} color={f.startsWith('✓')?'success':undefined} style={{fontSize:12,padding:'4px 8px'}}>{f}</Tag>
+                ))}
+              </Space>
+            </div>
+          )}
+
+          {/* Content area */}
+          <div className="content-area">
+            {/* Demo bar */}
+            <Alert
+              type="warning"
+              style={{marginBottom:16,fontSize:12}}
+              message={
+                <Space wrap size={6}>
+                  <Text strong>Demo State:</Text>
+                  {Object.entries(DEMO_STATES).map(([k,v])=>(
+                    <Button key={k} size="small" type={demoKey===k?'primary':'default'} onClick={()=>setDemoKey(k)}>{v.label}</Button>
+                  ))}
+                </Space>
+              }
+            />
+
+            {/* CLOSED STATE */}
+            {demo.closed ? (
+              <Result
+                status="success"
+                title="Settlement Closed"
+                subTitle="KBR2411088001 · Tokyo Skytree Tours · Closed by Hannah Ji · 2024-11-26 09:05"
+                extra={[
+                  <Button type="primary" key="list" href="kbr-list.html">Back to KBR List</Button>,
+                ]}
+              >
+                <Descriptions bordered size="small" column={2}>
+                  <Descriptions.Item label="KBR No.">KBR2411088001</Descriptions.Item>
+                  <Descriptions.Item label="Merchant">Tokyo Skytree Tours</Descriptions.Item>
+                  <Descriptions.Item label="Final Amount">¥1,844,500 JPY</Descriptions.Item>
+                  <Descriptions.Item label="PR No.">PR-2411-00897</Descriptions.Item>
+                  <Descriptions.Item label="Bank Confirmed">2024-11-25 11:22</Descriptions.Item>
+                  <Descriptions.Item label="Closed">2024-11-26 09:05</Descriptions.Item>
+                </Descriptions>
+              </Result>
+            ) : (
+              <Row gutter={16} align="top">
+                {/* LEFT */}
+                <Col flex="1" style={{minWidth:0}}>
+
+                  {/* Paid + ready to close */}
+                  {demo.paid && !demo.closed && (
+                    <Alert type="success" showIcon style={{marginBottom:12}}
+                      message="Payment Confirmed — Ready to Close Settlement"
+                      description="¥1,844,500 received by Tokyo Skytree Tours on 2024-11-25. You may now close this settlement."
+                      action={<Button size="small" type="primary" onClick={()=>setCloseOpen(true)}>Close Settlement</Button>}
+                    />
+                  )}
+
+                  {/* Payment Requests table */}
+                  <Card size="small" title={<Text strong>Payment Requests (PR)</Text>} style={{marginBottom:12}}>
+                    <Table
+                      dataSource={prRows}
+                      columns={prCols}
+                      size="small"
+                      pagination={false}
+                      scroll={{x:'max-content'}}
+                      rowClassName={r=>({success:'row-success',fail:'row-fail',processing:'row-processing'}[r.status]||'')}
+                    />
+                  </Card>
+
+                  {/* Failure resolution panel */}
+                  {demo.failureVisible && (
+                    <Card
+                      size="small"
+                      style={{marginBottom:12, borderLeft:'4px solid #ff4d4f'}}
+                      title={<Space><Text strong style={{color:'#ff4d4f'}}>⚠ Payment Failure — Resolution Required</Text></Space>}>
+                      <Space direction="vertical" style={{width:'100%'}} size={12}>
+                        <Descriptions size="small" bordered column={2}>
+                          <Descriptions.Item label="Failed PR">PR-2411-00831</Descriptions.Item>
+                          <Descriptions.Item label="Failure Date">2024-11-21 08:14</Descriptions.Item>
+                          <Descriptions.Item label="Reason" span={2}>
+                            <Text type="danger">Beneficiary account name mismatch</Text>
+                          </Descriptions.Item>
+                          <Descriptions.Item label="Bank" span={2}>Sumitomo Mitsui · account ··4421 — name does not match merchant registration</Descriptions.Item>
+                        </Descriptions>
+
+                        <Alert type="warning" showIcon
+                          message="The merchant must update their bank account in the Merchant Portal before a new PR can be generated."
+                          style={{fontSize:12}} />
+
+                        {/* Resolution steps */}
+                        <div>
+                          <Text strong style={{fontSize:12}}>Resolution Steps</Text>
+                          <Steps
+                            direction="vertical"
+                            size="small"
+                            style={{marginTop:8}}
+                            items={[
+                              { title:'Notify Merchant & BD',       status: demo.notifyVisible ? 'finish' : 'process',
+                                description:'Inform merchant to update bank account in portal.' },
+                              { title:'Merchant Updates Bank Account', status: demo.newPrVisible ? 'finish' : demo.notifyVisible ? 'process' : 'wait',
+                                description:'Merchant submits updated account via portal; AP verifies.' },
+                              { title:'Generate New PR',             status: demo.newPrVisible ? 'finish' : 'wait',
+                                description:'Create new payment request with verified account.' },
+                            ]}
+                          />
+                        </div>
+
+                        <Space wrap>
+                          {!demo.notifyVisible && (
+                            <Button type="primary" danger onClick={()=>setNotifyOpen(true)}>
+                              Notify Merchant & BD
+                            </Button>
+                          )}
+                          {demo.notifyVisible && !demo.newPrVisible && (
+                            <>
+                              <Tag color="success">✓ Merchant Notified</Tag>
+                              <Button type="primary" onClick={()=>setNewPrOpen(true)}>
+                                Generate New PR →
+                              </Button>
+                            </>
+                          )}
+                          {demo.newPrVisible && (
+                            <Tag color="success">✓ New PR Generated — PR-2411-00897</Tag>
+                          )}
+                        </Space>
+                      </Space>
+                    </Card>
+                  )}
+
+                  {/* Payment Timeline */}
+                  <Card size="small" title={<Text strong>Payment Timeline</Text>}>
+                    <Timeline
+                      style={{padding:'8px 0 0 8px'}}
+                      items={tlItems.map(t=>({
+                        color: t.color,
+                        children: (
+                          <div>
+                            <Text strong style={{fontSize:13}}>{t.label}</Text>
+                            <div style={{fontSize:12,color:'#8c8c8c'}}>{t.time}</div>
+                            <div style={{fontSize:12,color:'#595959',marginTop:2}}>{t.desc}</div>
+                          </div>
+                        ),
+                      }))}
+                    />
+                  </Card>
+
+                </Col>
+
+                {/* RIGHT */}
+                <Col width={260} style={{flexShrink:0}}>
+                  {/* PR Status */}
+                  <Card size="small" title="PR Status" style={{marginBottom:12}}>
+                    <Space direction="vertical" style={{width:'100%'}} size={6}>
+                      <div style={{display:'flex',justifyContent:'space-between',fontSize:12}}>
+                        <Text type="secondary">Overall</Text>
+                        <Badge status={ps.badge} text={ps.text} />
+                      </div>
+                      <div style={{display:'flex',justifyContent:'space-between',fontSize:12}}>
+                        <Text type="secondary">Note</Text>
+                        <Text>{ps.note}</Text>
+                      </div>
+                      <Divider style={{margin:'4px 0'}} />
+                      <div style={{display:'flex',justifyContent:'space-between',fontSize:12}}>
+                        <Text type="secondary">Net Payable</Text>
+                        <Text strong>¥1,844,500</Text>
+                      </div>
+                      <div style={{display:'flex',justifyContent:'space-between',fontSize:12}}>
+                        <Text type="secondary">Currency</Text>
+                        <Tag size="small">JPY</Tag>
+                      </div>
+                      <div style={{display:'flex',justifyContent:'space-between',fontSize:12}}>
+                        <Text type="secondary">Active PRs</Text>
+                        <Text>{prRows.filter(r=>r.status==='processing').length}</Text>
+                      </div>
+                    </Space>
+                  </Card>
+
+                  {/* Actions */}
+                  <Card size="small" title="Actions" style={{marginBottom:12}}>
+                    <Space direction="vertical" style={{width:'100%'}} size={6}>
+                      {demo.paid && !demo.closed && (
+                        <Button type="primary" block onClick={()=>setCloseOpen(true)}>
+                          ✓ Close Settlement
+                        </Button>
+                      )}
+                      {demo.failureVisible && !demo.notifyVisible && (
+                        <Button danger block onClick={()=>setNotifyOpen(true)}>
+                          Notify Merchant & BD
+                        </Button>
+                      )}
+                      {demo.failureVisible && demo.notifyVisible && !demo.newPrVisible && (
+                        <Button type="primary" block onClick={()=>setNewPrOpen(true)}>
+                          Generate New PR
+                        </Button>
+                      )}
+                      {!demo.paid && !demo.failureVisible && (
+                        <Button block onClick={()=>message.info('PR status refreshed')}>
+                          🔄 Refresh PR Status
+                        </Button>
+                      )}
+                      <Button size="small" block href="kbr-detail-p4.html">← Review & Submit</Button>
+                      <Button size="small" block href="kbr-list.html">Back to KBR List</Button>
+                    </Space>
+                  </Card>
+
+                  {/* Settlement info */}
+                  <Card size="small" title="Settlement Info">
+                    <Space direction="vertical" style={{width:'100%'}} size={4}>
+                      {[
+                        ['KBR','KBR2411088001'],
+                        ['Merchant','Tokyo Skytree Tours'],
+                        ['Period','Nov 2024'],
+                        ['Submitted','2024-11-20 14:37'],
+                        ['Assignee','Hannah Ji'],
+                      ].map(([k,v])=>(
+                        <div key={k} style={{display:'flex',justifyContent:'space-between',fontSize:12}}>
+                          <Text type="secondary">{k}</Text>
+                          <Text>{v}</Text>
+                        </div>
+                      ))}
+                    </Space>
+                  </Card>
+
+                </Col>
+              </Row>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Notify Modal */}
+      <Modal
+        title="Notify Merchant & BD — Payment Failure"
+        open={notifyOpen}
+        onOk={()=>{ setNotifyOpen(false); setDemoKey('notifying'); message.success('Notification sent'); }}
+        onCancel={()=>setNotifyOpen(false)}
+        okText="Send Notification">
+        <Alert type="warning" showIcon style={{marginBottom:12,fontSize:12}}
+          message="Reason: Beneficiary account mismatch — the bank account on file does not match the merchant's registered account name." />
+        <Form layout="vertical" size="small">
+          <Form.Item label="Notify">
+            <Select defaultValue="both" style={{width:'100%'}}
+              options={[
+                {label:'Merchant + BD (recommended)',value:'both'},
+                {label:'BD only',value:'bd'},
+                {label:'Merchant only',value:'merchant'},
+              ]} />
+          </Form.Item>
+          <Form.Item label="Message">
+            <Input.TextArea rows={5} value={notifyMsg} onChange={e=>setNotifyMsg(e.target.value)} />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* Generate New PR Modal */}
+      <Modal
+        title="Generate New Payment Request"
+        open={newPrOpen}
+        onOk={()=>{ setNewPrOpen(false); setDemoKey('new_pr'); message.success('New PR PR-2411-00897 generated'); }}
+        onCancel={()=>setNewPrOpen(false)}
+        okText="Generate & Push New PR →">
+        <Alert type="success" showIcon style={{marginBottom:12,fontSize:12}}
+          message="Merchant Portal Updated — Tokyo Skytree Tours has updated their bank account. New account verified." />
+        <Row gutter={12} style={{marginBottom:12}}>
+          <Col span={12}>
+            <div style={{background:'#fff2f0',borderRadius:6,padding:'10px 12px'}}>
+              <div style={{fontSize:10,fontWeight:700,color:'#8c8c8c',marginBottom:4}}>PREVIOUS ACCOUNT</div>
+              <Text delete type="danger" strong>Sumitomo Mitsui ··4421</Text>
+              <div style={{fontSize:11,color:'#8c8c8c'}}>Returned — name mismatch</div>
+            </div>
+          </Col>
+          <Col span={12}>
+            <div style={{background:'#f6ffed',borderRadius:6,padding:'10px 12px'}}>
+              <div style={{fontSize:10,fontWeight:700,color:'#8c8c8c',marginBottom:4}}>NEW ACCOUNT</div>
+              <Text style={{color:'#52c41a'}} strong>Sumitomo Mitsui ··6883</Text>
+              <div style={{fontSize:11,color:'#8c8c8c'}}>Verified 2024-11-23</div>
+            </div>
+          </Col>
+        </Row>
+        <Descriptions bordered size="small" column={1}>
+          <Descriptions.Item label="Amount">¥1,844,500 JPY</Descriptions.Item>
+          <Descriptions.Item label="Reference">Retry — KBR2411088001 · New account ··6883</Descriptions.Item>
+        </Descriptions>
+      </Modal>
+
+      {/* Close Settlement Modal */}
+      <Modal
+        title="Close Settlement"
+        open={closeOpen}
+        onOk={()=>{ setCloseOpen(false); setDemoKey('closed'); message.success('Settlement closed'); }}
+        onCancel={()=>setCloseOpen(false)}
+        okText="Close Settlement ✓"
+        okButtonProps={{danger:true}}>
+        <Alert type="success" showIcon style={{marginBottom:12,fontSize:12}}
+          message="Payment confirmed — Bank confirmed receipt of ¥1,844,500 by Tokyo Skytree Tours on 2024-11-25." />
+        <Text style={{fontSize:13}}>Mark this KBR as <Text strong>Closed</Text>. This action cannot be undone. The KBR will be archived and removed from your active queue.</Text>
+      </Modal>
+
+    </ConfigProvider>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

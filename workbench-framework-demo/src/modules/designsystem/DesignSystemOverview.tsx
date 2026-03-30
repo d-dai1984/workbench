@@ -1,31 +1,96 @@
-import { Typography, Divider, Space, Tag } from 'antd'
+import { Typography, Divider, Space, Tag, theme } from 'antd'
 import './DesignSystemOverview.css'
 
 const { Title, Text, Paragraph } = Typography
 
-const primaryColors = [
-  { hex: '#FFF2E8', label: 'Primary BG' },
-  { hex: '#FFD8BF', label: 'BG Hover' },
-  { hex: '#FFBB96', label: 'Border' },
-  { hex: '#FF8C4D', label: 'Border Hover' },
-  { hex: '#FF7A45', label: 'Hover' },
-  { hex: '#FF5B00', label: 'Primary', isPrimary: true },
-  { hex: '#D4380D', label: 'Active' },
-]
+const themeConfig: Record<string, {
+  name: string
+  subtitle: string
+  primaryColors: { hex: string; label: string; isPrimary?: boolean }[]
+  semanticColors: { hex: string; label: string }[]
+}> = {
+  klook: {
+    name: 'Klook Bench 2026 - Orange',
+    subtitle: 'B 端 Workbench 设计规范 · 基于 Ant Design 5.x · 主题色：Klook 品牌橙',
+    primaryColors: [
+      { hex: '#FFF2E8', label: 'Primary BG' },
+      { hex: '#FFD8BF', label: 'BG Hover' },
+      { hex: '#FFBB96', label: 'Border' },
+      { hex: '#FF8C4D', label: 'Border Hover' },
+      { hex: '#FF7A45', label: 'Hover' },
+      { hex: '#FF5B00', label: 'Primary', isPrimary: true },
+      { hex: '#D4380D', label: 'Active' },
+    ],
+    semanticColors: [
+      { hex: '#00B33C', label: 'Success' },
+      { hex: '#FFB800', label: 'Warning' },
+      { hex: '#FF4D4F', label: 'Error' },
+      { hex: '#1E90FF', label: 'Info' },
+    ],
+  },
+  bench: {
+    name: 'Klook Bench 2026 - Blue',
+    subtitle: 'B 端 Workbench 设计规范 · 基于 Ant Design 5.x · 主题色：Klook Bench 蓝',
+    primaryColors: [
+      { hex: '#E6F4FF', label: 'Primary BG' },
+      { hex: '#BAE0FF', label: 'BG Hover' },
+      { hex: '#91CAFF', label: 'Border' },
+      { hex: '#69B1FF', label: 'Border Hover' },
+      { hex: '#4096FF', label: 'Hover' },
+      { hex: '#1677FF', label: 'Primary', isPrimary: true },
+      { hex: '#0958D9', label: 'Active' },
+    ],
+    semanticColors: [
+      { hex: '#52C41A', label: 'Success' },
+      { hex: '#FAAD14', label: 'Warning' },
+      { hex: '#FF4D4F', label: 'Error' },
+      { hex: '#1677FF', label: 'Info' },
+    ],
+  },
+  antd: {
+    name: 'AntD Default',
+    subtitle: 'Ant Design 5.x 默认主题 · 标准蓝色主题色',
+    primaryColors: [
+      { hex: '#E6F4FF', label: 'Primary BG' },
+      { hex: '#BAE0FF', label: 'BG Hover' },
+      { hex: '#91CAFF', label: 'Border' },
+      { hex: '#69B1FF', label: 'Border Hover' },
+      { hex: '#4096FF', label: 'Hover' },
+      { hex: '#1677FF', label: 'Primary', isPrimary: true },
+      { hex: '#0958D9', label: 'Active' },
+    ],
+    semanticColors: [
+      { hex: '#52C41A', label: 'Success' },
+      { hex: '#FAAD14', label: 'Warning' },
+      { hex: '#FF4D4F', label: 'Error' },
+      { hex: '#1677FF', label: 'Info' },
+    ],
+  },
+}
 
-const semanticColors = [
-  { hex: '#00B33C', label: 'Success' },
-  { hex: '#FFB800', label: 'Warning' },
-  { hex: '#FF4D4F', label: 'Error' },
-  { hex: '#1E90FF', label: 'Info' },
-]
+interface Props {
+  activeTheme?: string
+}
 
-export function DesignSystemOverview() {
+export function DesignSystemOverview({ activeTheme = 'klook' }: Props) {
+  const { token } = theme.useToken()
+  const config = themeConfig[activeTheme] ?? themeConfig.klook
+  const { name, subtitle, primaryColors, semanticColors } = config
+
   return (
     <div className="dso-page">
       <div className="dso-hero">
-        <h1 className="dso-hero-title">Klook-2026 Workbench Design System</h1>
-        <p className="dso-hero-subtitle">B 端 Workbench 设计规范 · 基于 Ant Design 5.x</p>
+        <h1
+          className="dso-hero-title"
+          style={{
+            fontSize: token.fontSizeHeading1,
+            fontWeight: token.fontWeightStrong,
+            color: token.colorPrimary,
+          }}
+        >
+          {name} Design System
+        </h1>
+        <p className="dso-hero-subtitle">{subtitle}</p>
       </div>
 
       {/* Design Principles */}
@@ -184,7 +249,7 @@ import { Button, Input, Select, Table } from 'antd'
 import { PlusOutlined, SearchOutlined } from '@ant-design/icons'
 
 // ✅ 主题从 shell/theme 导入
-import { klook2026Theme, ThemeSync } from '@/shell/theme'`}</code></pre>
+import { klook2026Theme, klookBench2026Theme, ThemeSync } from '@/shell/theme'`}</code></pre>
         </div>
         <div className="dso-code-block">
           <div className="dso-code-label">样式约定</div>

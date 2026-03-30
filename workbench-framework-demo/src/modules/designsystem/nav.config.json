@@ -1,9 +1,26 @@
 {
   "groups": [
     {
+      "groupLabel": "DESIGN SKILL",
+      "items": [
+        { "key": "ds-skill-guide", "label": "Skill Guide" },
+        { "key": "ds-layout-framework", "label": "Layout Framework" },
+        { "key": "ds-page-patterns", "label": "Page Patterns" },
+        { "key": "ds-container-structure", "label": "Container Structure" },
+        { "key": "ds-business-modules", "label": "Business Modules" },
+        { "key": "ds-component-rules", "label": "Component Rules" },
+        { "key": "ds-design-tokens", "label": "Design Tokens" },
+        { "key": "ds-states-feedback", "label": "States & Feedback" },
+        { "key": "ds-content-guidelines", "label": "Content Guidelines" },
+        { "key": "ds-review-checklist", "label": "Review Checklist" },
+        { "key": "ds-icons", "label": "Icons" },
+        { "key": "ds-charts", "label": "Charts" },
+        { "key": "ds-project-structure", "label": "Project Structure" }
+      ]
+    },
+    {
       "groupLabel": "ATOMIC COMPONENTS",
       "items": [
-        { "key": "ds-overview", "label": "Overview" },
         { "key": "ds-color", "label": "Color System" },
         { "key": "ds-typography", "label": "Typography" },
         { "key": "ds-button", "label": "Button" },
@@ -16,15 +33,6 @@
         { "key": "ds-nav", "label": "Navigation" },
         { "key": "ds-data", "label": "Table & Card" },
         { "key": "ds-states", "label": "States" }
-      ]
-    },
-    {
-      "groupLabel": "MODULE COMPONENTS",
-      "items": [
-        { "key": "ds-campaign-table", "label": "Campaign Table" },
-        { "key": "ds-template-card", "label": "Template Card" },
-        { "key": "ds-heatmap", "label": "Heatmap Calendar" },
-        { "key": "ds-step-form", "label": "Step Form" }
       ]
     }
   ]

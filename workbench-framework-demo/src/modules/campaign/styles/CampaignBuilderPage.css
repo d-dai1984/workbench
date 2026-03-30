@@ -1,0 +1,35 @@
+.cpb-page {
+  background: var(--klook-bench-color-bg-layout, #fafafa);
+  min-height: 100%;
+}
+
+.cpb-breadcrumb {
+  padding: 10px 24px;
+  background: #fff;
+  border-bottom: 1px solid var(--klook-bench-color-border, #f0f0f0);
+}
+
+.cpb-body {
+  padding: 20px 24px;
+}
+
+.cpb-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 16px;
+}
+
+.cpb-goals-sticky {
+  position: sticky;
+  top: 20px;
+}
+
+.cpb-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--klook-bench-color-border, #f0f0f0);
+}

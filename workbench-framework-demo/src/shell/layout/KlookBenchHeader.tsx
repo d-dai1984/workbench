@@ -13,21 +13,13 @@ import {
   SettingOutlined,
   LogoutOutlined,
   BorderOutlined,
+  BgColorsOutlined,
+  CheckOutlined,
 } from '@ant-design/icons'
 import type { MenuProps } from 'antd'
 
 const { Header } = Layout
 const { Text } = Typography
-
-const userMenuItems: MenuProps['items'] = [
-  { key: 'profile', label: 'Profile', icon: <UserOutlined /> },
-  { key: 'super-admin', label: 'Super Admin', icon: <SafetyCertificateOutlined /> },
-  { key: 'settings', label: 'System Settings', icon: <SettingOutlined /> },
-  { key: 'nav-settings', label: 'Setting Navigation', icon: <SettingOutlined /> },
-  { key: 'grid-page', label: '24 Grid & Layouts', icon: <AppstoreOutlined /> },
-  { key: 'design-system', label: 'Design System', icon: <AppstoreOutlined /> },
-  { key: 'logout', label: 'Log out', icon: <LogoutOutlined /> },
-]
 
 export interface MerchantRoleItem {
   key: string
@@ -48,6 +40,8 @@ export interface KlookBenchHeaderProps {
   gridOverlayVisible?: boolean
   onGridOverlayChange?: (visible: boolean) => void
   onBusinessLineChange?: (key: string) => void
+  activeTheme?: string
+  onThemeChange?: (key: string) => void
 }
 
 export function KlookBenchHeader({
@@ -61,8 +55,43 @@ export function KlookBenchHeader({
   gridOverlayVisible = false,
   onGridOverlayChange,
   onBusinessLineChange,
+  activeTheme = 'klook',
+  onThemeChange,
 }: KlookBenchHeaderProps) {
   const [merchantOpen, setMerchantOpen] = useState(false)
+
+  const userMenuItems: MenuProps['items'] = [
+    { key: 'profile', label: 'Profile', icon: <UserOutlined /> },
+    { key: 'super-admin', label: 'Super Admin', icon: <SafetyCertificateOutlined /> },
+    { key: 'settings', label: 'System Settings', icon: <SettingOutlined /> },
+    { key: 'nav-settings', label: 'Setting Navigation', icon: <SettingOutlined /> },
+    { key: 'grid-page', label: '24 Grid & Layouts', icon: <AppstoreOutlined /> },
+    { key: 'design-system', label: 'Design System', icon: <AppstoreOutlined /> },
+    { type: 'divider' },
+    {
+      key: 'theme',
+      icon: <BgColorsOutlined />,
+      label: 'Switch Theme',
+      children: [
+        {
+          key: 'theme-klook',
+          label: 'Klook Bench 2026 - Orange',
+          icon: activeTheme === 'klook' ? <CheckOutlined /> : <span style={{ display: 'inline-block', width: 14 }} />,
+        },
+        {
+          key: 'theme-bench',
+          label: 'Klook Bench 2026 - Blue',
+          icon: activeTheme === 'bench' ? <CheckOutlined /> : <span style={{ display: 'inline-block', width: 14 }} />,
+        },
+        {
+          key: 'theme-antd',
+          label: 'AntD Default',
+          icon: activeTheme === 'antd' ? <CheckOutlined /> : <span style={{ display: 'inline-block', width: 14 }} />,
+        },
+      ],
+    },
+    { key: 'logout', label: 'Log out', icon: <LogoutOutlined /> },
+  ]
 
   const merchantContent = (
     <div className="klook-bench-merchant-popover-content">
@@ -157,6 +186,9 @@ export function KlookBenchHeader({
               if (key === 'nav-settings') onOpenNavSettings?.()
               if (key === 'grid-page') onGridPageClick?.()
               if (key === 'design-system') onDesignSystemClick?.()
+              if (key === 'theme-klook') onThemeChange?.('klook')
+              if (key === 'theme-bench') onThemeChange?.('bench')
+              if (key === 'theme-antd') onThemeChange?.('antd')
             },
           }}
           trigger={['click']}

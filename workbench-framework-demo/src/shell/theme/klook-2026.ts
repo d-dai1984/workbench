@@ -90,7 +90,7 @@ export const klook2026Theme: ThemeConfig = {
     borderRadius: 4,
     borderRadiusXS: 2,
     borderRadiusSM: 3,
-    borderRadiusLG: 6,
+    borderRadiusLG: 16,
 
     // ----- Spacing -----
     padding: 16,
@@ -103,5 +103,13 @@ export const klook2026Theme: ThemeConfig = {
     // ----- Shadow -----
     boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.03)',
     boxShadowSecondary: '0 2px 8px 0 rgba(0, 0, 0, 0.05)',
+  },
+  components: {
+    Card: {
+      bodyPaddingSM: 24,
+      headerPaddingSM: 24,
+      headerHeightSM: 56,
+      borderRadiusLG: 16,
+    },
   },
 }

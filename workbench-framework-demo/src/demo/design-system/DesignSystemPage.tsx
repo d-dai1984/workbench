@@ -19,6 +19,7 @@ import { CampaignTableDemo } from './modules/CampaignTableDemo'
 import { TemplateCardDemo } from './modules/TemplateCardDemo'
 import { HeatmapCalendarDemo } from './modules/HeatmapCalendarDemo'
 import { StepFormSectionDemo } from './modules/StepFormSectionDemo'
+import { PagePatternsDemo } from './modules/PagePatternsDemo'
 import './DesignSystemPage.css'
 
 const { Title, Text, Paragraph, Link } = Typography
@@ -64,6 +65,7 @@ const SECTION_MAP: Record<string, string> = {
   'ds-template-card': 'template-card',
   'ds-heatmap': 'heatmap',
   'ds-step-form': 'step-form',
+  'ds-page-patterns': 'page-patterns',
 }
 
 interface DesignSystemPageProps {
@@ -887,6 +889,9 @@ const data = [
       {show('step-form') && <Section title="StepFormSection 分步表单" desc="编号区块头 · 计划卡片 · Radio Card · 虚线添加">
         <StepFormSectionDemo />
       </Section>}
+
+      {/* ========== Page Patterns ========== */}
+      {show('page-patterns') && <PagePatternsDemo />}
 
       <Divider />
       <div className="ds-page-footer">

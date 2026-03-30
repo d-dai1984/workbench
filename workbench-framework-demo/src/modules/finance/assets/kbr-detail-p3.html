@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Finance Workbench — Issue Resolution</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/antd@5.22.2/dist/reset.css">
+<script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/customParseFormat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/weekday.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/localeData.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/weekOfYear.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/weekYear.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/advancedFormat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/quarterOfYear.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/antd@5.22.2/dist/antd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.24.7/babel.min.js"></script>
+<style>
+  body { margin: 0; background: #f5f5f5; }
+
+  /* Sidebar */
+  .sider-inner { display:flex; flex-direction:column; align-items:center; padding:12px 0; gap:4px; height:100%; }
+  .sider-btn { width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#94a3b8; cursor:pointer; font-size:16px; border:none; background:transparent; }
+  .sider-btn:hover { background:#112240; color:#e2e8f0; }
+  .sider-btn.active { background:#1677ff; color:#fff; }
+
+  /* Shell bars */
+  .topnav { background:#fff; border-bottom:1px solid #f0f0f0; height:52px; display:flex; align-items:center; justify-content:space-between; padding:0 24px; flex-shrink:0; }
+  .topnav-logo { font-size:15px; font-weight:700; color:#1e293b; }
+  .back-bar { background:#fff; padding:8px 24px 0; flex-shrink:0; }
+  .identity-bar { background:#fafafa; border-top:1px solid #f0f0f0; border-bottom:1px solid #f0f0f0; padding:9px 24px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+  .steps-bar { background:#fff; border-bottom:1px solid #f0f0f0; padding:14px 32px; flex-shrink:0; }
+  .global-bar { background:#fff; border-bottom:1px solid #f0f0f0; padding:8px 24px; display:flex; align-items:center; gap:8px; flex-shrink:0; }
+  .content-area { flex:1; overflow-y:auto; padding:20px 24px; background:#f5f5f5; }
+
+  /* Layout */
+  .root-layout { height:100vh; overflow:hidden; display:flex; }
+  .main-layout { flex:1; display:flex; flex-direction:column; overflow:hidden; min-width:0; }
+
+  /* Row highlighting in issue table */
+  .row-resolved td { background:#f6ffed !important; }
+  .row-pending td { background:#fff !important; }
+
+  /* Section card title spacing */
+  .section-label { font-size:11px; font-weight:600; color:#8c8c8c; letter-spacing:.5px; text-transform:uppercase; margin-bottom:8px; }
+
+  /* Progress checklist */
+  .checklist-item { display:flex; align-items:center; gap:8px; font-size:13px; padding:4px 0; }
+  .checklist-item .anticon { font-size:15px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" data-presets="react">
+const {
+  ConfigProvider, Layout, Menu, Steps, Table, Tabs, Tag, Badge, Button, Space,
+  Card, Row, Col, Statistic, Alert, Breadcrumb, Collapse, Select, Input,
+  Typography, Divider, Progress, Modal, Form, Radio, Tooltip, Popconfirm,
+  InputNumber, Upload, message
+} = antd;
+const { Text, Title, Paragraph } = Typography;
+const { useState, useMemo } = React;
+
+/* ── Demo states ── */
+const DEMO_STATES = {
+  mixed:       { label:'Mixed Issues',         gmReq:false, gmStatus:null,     advStatus:null,      allResolved:false },
+  allDone:     { label:'All Resolved',         gmReq:false, gmStatus:null,     advStatus:null,      allResolved:true  },
+  gmRequired:  { label:'GM Approval Required', gmReq:true,  gmStatus:'pending',advStatus:null,      allResolved:true  },
+  gmPending:   { label:'GM Approval Pending',  gmReq:true,  gmStatus:'pending',advStatus:null,      allResolved:true  },
+  gmApproved:  { label:'GM Approved',          gmReq:true,  gmStatus:'approved',advStatus:null,     allResolved:true  },
+  gmRejected:  { label:'GM Rejected',          gmReq:true,  gmStatus:'rejected',advStatus:null,     allResolved:true  },
+  advPending:  { label:'Advance Payment Pending',gmReq:true,gmStatus:'approved',advStatus:'pending',allResolved:true  },
+  advApproved: { label:'Advance Payment Done', gmReq:true,  gmStatus:'approved',advStatus:'approved',allResolved:true },
+};
+
+/* ── BD001 booking data ── */
+const BD001_BOOKINGS = [
+  { key:'b1', booking:'KLK-8821034', activity:'teamLab Borderless Tokyo', date:'2025-11-05', pax:2, klookAmt:188.00, merchantAmt:200.00, disc:12.00, status:'Discrepancy' },
+  { key:'b2', booking:'KLK-8821035', activity:'teamLab Planets TOYOSU',   date:'2025-11-07', pax:4, klookAmt:320.00, merchantAmt:320.00, disc:0,    status:'Matched'      },
+];
+const BOOKING_COLS = [
+  { title:'Booking ID',       dataIndex:'booking',     key:'booking',     fixed:'left', width:130 },
+  { title:'Activity',         dataIndex:'activity',    key:'activity',    width:220 },
+  { title:'Date',             dataIndex:'date',        key:'date',        width:110 },
+  { title:'Pax',              dataIndex:'pax',         key:'pax',         width:60,  align:'center' },
+  { title:'Klook Amt (USD)',  dataIndex:'klookAmt',    key:'klookAmt',    width:130, align:'right', render:v=>`$${v.toFixed(2)}` },
+  { title:'Merchant Amt (USD)',dataIndex:'merchantAmt',key:'merchantAmt', width:140, align:'right', render:v=>`$${v.toFixed(2)}` },
+  { title:'Discrepancy (USD)',dataIndex:'disc',        key:'disc',        width:140, align:'right', render:v=>v>0?<Text type="danger">-${v.toFixed(2)}</Text>:<Text type="success">$0.00</Text> },
+  { title:'Status',           dataIndex:'status',      key:'status',      width:110, render:v=>v==='Matched'?<Tag color="success">{v}</Tag>:<Tag color="warning">{v}</Tag> },
+];
+
+/* ── Issue reasons ── */
+const ISSUE_REASONS = [
+  'Price discrepancy','Missing booking','Duplicate booking','Merchant overcharge',
+  'Currency conversion error','VAT/Tax discrepancy','Cancellation not reflected',
+  'Partial refund discrepancy','Commission rate error','FX rate discrepancy',
+  'Data entry error','Other',
+];
+
+/* ── Initial issues ── */
+const INITIAL_ISSUES = [
+  { key:'i1', ticket:'BD-001', ref:'teamLab Borderless Tokyo', reason:'Price discrepancy',   amount:-12.00, status:'pending',  note:'Merchant quoted USD 200, Klook records USD 188.' },
+  { key:'i2', ticket:'CEG-012',ref:'Cancellation Nov-03',      reason:'Cancellation not reflected', amount:-45.00, status:'pending',  note:'Guest cancelled 48h before but merchant not updated.' },
+  { key:'i3', ticket:'BD-001', ref:'FX Rate Nov period',       reason:'Currency conversion error',  amount:-8.50, status:'resolved', note:'Agreed: use mid-market rate on settlement date.' },
+];
+
+/* ── GM threshold ── */
+const GROSS = 5800;
+const GM_THRESHOLD_PCT = 0.02;
+
+/* ─────────────────────────────────────────────
+   Main App
+───────────────────────────────────────────── */
+function App() {
+  const [demoKey,       setDemoKey]       = useState('mixed');
+  const [globalPanel,   setGlobalPanel]   = useState(null);
+  const [dedReason,     setDedReason]     = useState(null);
+  const [dedAmount,     setDedAmount]     = useState('');
+  const [addIssueOpen,  setAddIssueOpen]  = useState(false);
+  const [newReason,     setNewReason]     = useState(null);
+  const [newDetail,     setNewDetail]     = useState('');
+  const [newAmount,     setNewAmount]     = useState('');
+  const [newTicket,     setNewTicket]     = useState('BD-001');
+  const [issues,        setIssues]        = useState(INITIAL_ISSUES);
+
+  const demo = DEMO_STATES[demoKey];
+
+  /* derived */
+  const pendingIssues   = issues.filter(i => i.status === 'pending');
+  const resolvedIssues  = issues.filter(i => i.status === 'resolved');
+  const totalAdj        = issues.reduce((s,i) => s + i.amount, 0);
+  const adjPct          = Math.abs(totalAdj) / GROSS;
+  const needsGM         = adjPct > GM_THRESHOLD_PCT;
+
+  /* override with demo state */
+  const effectiveAllResolved = demo.allResolved || pendingIssues.length === 0;
+  const effectiveGmReq       = demo.gmReq || (needsGM && effectiveAllResolved);
+
+  /* resolve / delete */
+  const resolveIssue = (key) => setIssues(prev => prev.map(i => i.key===key ? {...i, status:'resolved'} : i));
+  const deleteIssue  = (key) => setIssues(prev => prev.filter(i => i.key !== key));
+
+  /* add issue */
+  const handleAddIssue = () => {
+    if (!newReason) { message.warning('Please select a reason'); return; }
+    const key = 'i' + Date.now();
+    setIssues(prev => [...prev, {
+      key, ticket: newTicket, ref: newReason,
+      reason: newReason, amount: parseFloat(newAmount)||0,
+      status: 'pending', note: newDetail,
+    }]);
+    setAddIssueOpen(false);
+    setNewReason(null); setNewDetail(''); setNewAmount(''); setNewTicket('BD-001');
+  };
+
+  /* steps */
+  const STEPS = [
+    { title:'Overview' },
+    { title:'Reconciliation' },
+    { title:'Issue Resolution' },
+    { title:'Review & Submit' },
+    { title:'GM Approval' },
+    { title:'Payment Tracking' },
+  ];
+
+  /* checklist */
+  const checks = [
+    { label:'All BD tickets resolved',  done: resolvedIssues.filter(i=>i.ticket.startsWith('BD')).length > 0 && pendingIssues.filter(i=>i.ticket.startsWith('BD')).length === 0 },
+    { label:'All CEG tickets resolved', done: resolvedIssues.filter(i=>i.ticket.startsWith('CEG')).length > 0 && pendingIssues.filter(i=>i.ticket.startsWith('CEG')).length === 0 },
+    { label:'GM approval obtained',     done: demo.gmStatus === 'approved' || demo.gmStatus === null && !effectiveGmReq },
+  ];
+  const allChecked = checks.every(c => c.done);
+
+  /* issue table columns */
+  const issueCols = [
+    { title:'Ticket',  dataIndex:'ticket',  key:'ticket',  width:90,  render:v=><Tag color={v.startsWith('BD')?'blue':'purple'}>{v}</Tag> },
+    { title:'Ref / Activity', dataIndex:'ref', key:'ref', width:200 },
+    { title:'Reason',  dataIndex:'reason',  key:'reason',  width:180 },
+    { title:'Adj (USD)',dataIndex:'amount', key:'amount',  width:110, align:'right',
+      render:v=><Text type={v<0?'danger':'success'}>{v<0?`-$${Math.abs(v).toFixed(2)}`:`+$${v.toFixed(2)}`}</Text> },
+    { title:'Status',  dataIndex:'status',  key:'status',  width:100,
+      render:v=>v==='resolved'?<Tag color="success">Resolved</Tag>:<Tag color="warning">Pending</Tag> },
+    { title:'Note',    dataIndex:'note',    key:'note',    ellipsis:true },
+    { title:'Actions', key:'actions', width:150, fixed:'right',
+      render:(_,r)=> r.status==='pending' ? (
+        <Space>
+          <Button size="small" type="primary" onClick={()=>resolveIssue(r.key)}>Resolve</Button>
+          <Popconfirm title="Delete this issue?" onConfirm={()=>deleteIssue(r.key)}>
+            <Button size="small" danger>Delete</Button>
+          </Popconfirm>
+        </Space>
+      ) : (
+        <Popconfirm title="Remove resolved issue?" onConfirm={()=>deleteIssue(r.key)}>
+          <Button size="small">Remove</Button>
+        </Popconfirm>
+      )
+    },
+  ];
+
+  /* GM card */
+  const renderGMCard = () => {
+    if (!effectiveGmReq) return null;
+    const st = demo.gmStatus;
+    const statusMap = {
+      pending:  { color:'processing', text:'Pending GM Approval' },
+      approved: { color:'success',    text:'GM Approved' },
+      rejected: { color:'error',      text:'GM Rejected' },
+    };
+    const info = statusMap[st] || statusMap.pending;
+    return (
+      <Card size="small" title={<Space><span>🏦</span><span>GM Approval</span></Space>}
+        style={{marginBottom:12, borderLeft:'4px solid #1677ff'}}
+        extra={<Badge status={info.color} text={info.text} />}>
+        <Space direction="vertical" style={{width:'100%'}} size={6}>
+          <Text type="secondary" style={{fontSize:12}}>
+            Total adjustment <Text strong type="danger">{(adjPct*100).toFixed(1)}%</Text> of gross exceeds 2% threshold — GM approval required.
+          </Text>
+          {st === 'pending' && (
+            <Alert type="warning" showIcon message="Awaiting GM sign-off. You may not proceed until approved." style={{fontSize:12}} />
+          )}
+          {st === 'approved' && (
+            <Alert type="success" showIcon message="GM has approved the adjustments. Proceed to Review & Submit." style={{fontSize:12}} />
+          )}
+          {st === 'rejected' && (
+            <Alert type="error" showIcon message="GM rejected. Please revise issues and resubmit for approval." style={{fontSize:12}} />
+          )}
+          {st === 'pending' && (
+            <Space>
+              <Button size="small" type="primary">Send Reminder</Button>
+              <Button size="small">View Approval Chain</Button>
+            </Space>
+          )}
+          {demo.advStatus && (
+            <>
+              <Divider style={{margin:'8px 0'}} />
+              <Text style={{fontSize:12}}>Advance Payment:&nbsp;
+                {demo.advStatus === 'approved'
+                  ? <Tag color="success">Processed</Tag>
+                  : <Tag color="processing">Pending</Tag>}
+              </Text>
+            </>
+          )}
+        </Space>
+      </Card>
+    );
+  };
+
+  /* Collapse items for BD / CEG tickets */
+  const collapseItems = [
+    {
+      key: 'BD-001',
+      label: (
+        <Space>
+          <Tag color="blue">BD-001</Tag>
+          <Text strong>teamLab Borderless Tokyo — Booking Discrepancy</Text>
+          <Tag color={pendingIssues.filter(i=>i.ticket==='BD-001').length?'warning':'success'}>
+            {pendingIssues.filter(i=>i.ticket==='BD-001').length ? `${pendingIssues.filter(i=>i.ticket==='BD-001').length} Pending` : 'Resolved'}
+          </Tag>
+        </Space>
+      ),
+      children: (
+        <Space direction="vertical" style={{width:'100%'}} size={12}>
+          <Card size="small" title="Booking Detail" bordered={false} style={{background:'#fafafa'}}>
+            <Table
+              dataSource={BD001_BOOKINGS}
+              columns={BOOKING_COLS}
+              size="small"
+              pagination={false}
+              scroll={{x:'max-content'}}
+            />
+          </Card>
+          <Space>
+            <Button size="small" type="primary" onClick={()=>setAddIssueOpen(true)}>+ Add Issue</Button>
+            <Text type="secondary" style={{fontSize:12}}>Issues linked to BD-001</Text>
+          </Space>
+          <Table
+            dataSource={issues.filter(i=>i.ticket==='BD-001')}
+            columns={issueCols}
+            size="small"
+            pagination={false}
+            scroll={{x:'max-content'}}
+            rowClassName={r=>r.status==='resolved'?'row-resolved':'row-pending'}
+          />
+        </Space>
+      ),
+    },
+    {
+      key: 'CEG-012',
+      label: (
+        <Space>
+          <Tag color="purple">CEG-012</Tag>
+          <Text strong>Cancellation Not Reflected — Nov-03</Text>
+          <Tag color={pendingIssues.filter(i=>i.ticket==='CEG-012').length?'warning':'success'}>
+            {pendingIssues.filter(i=>i.ticket==='CEG-012').length ? `${pendingIssues.filter(i=>i.ticket==='CEG-012').length} Pending` : 'Resolved'}
+          </Tag>
+        </Space>
+      ),
+      children: (
+        <Space direction="vertical" style={{width:'100%'}} size={12}>
+          <Alert type="info" showIcon message="Guest cancelled KLK-8821050 on Nov-03 (48h before activity). Merchant settlement still includes the booking." style={{fontSize:12}} />
+          <Space>
+            <Button size="small" type="primary" onClick={()=>{ setNewTicket('CEG-012'); setAddIssueOpen(true); }}>+ Add Issue</Button>
+            <Text type="secondary" style={{fontSize:12}}>Issues linked to CEG-012</Text>
+          </Space>
+          <Table
+            dataSource={issues.filter(i=>i.ticket==='CEG-012')}
+            columns={issueCols}
+            size="small"
+            pagination={false}
+            scroll={{x:'max-content'}}
+            rowClassName={r=>r.status==='resolved'?'row-resolved':'row-pending'}
+          />
+        </Space>
+      ),
+    },
+  ];
+
+  return (
+    <ConfigProvider theme={{ token:{ fontFamily:'-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif', fontSize:13, borderRadius:6, colorPrimary:'#1677ff' }}}>
+      <div className="root-layout">
+        {/* Sidebar */}
+        <div style={{width:56, background:'#001529', flexShrink:0}}>
+          <div className="sider-inner">
+            <div className="sider-btn active" title="Home">⌂</div>
+            <div className="sider-btn" title="Search">⊕</div>
+            <div className="sider-btn" title="Notifications">🔔</div>
+            <div style={{flex:1}} />
+            <div className="sider-btn" title="Settings">⚙</div>
+          </div>
+        </div>
+
+        {/* Main */}
+        <div className="main-layout">
+          {/* Top nav */}
+          <div className="topnav">
+            <span className="topnav-logo">Finance Workbench</span>
+            <Space size={12}>
+              <Tag color="processing">AP Ops</Tag>
+              <Space size={6}>
+                <div style={{width:28,height:28,borderRadius:'50%',background:'#1677ff',color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700}}>HJ</div>
+                <span style={{fontSize:13,fontWeight:600}}>Hannah Ji</span>
+              </Space>
+            </Space>
+          </div>
+
+          {/* Back bar */}
+          <div className="back-bar">
+            <Breadcrumb items={[
+              { title:<a href="kbr-list.html">KBR List</a> },
+              { title:'KBR-JP-2025-001' },
+              { title:'Issue Resolution' },
+            ]} />
+          </div>
+
+          {/* Identity bar */}
+          <div className="identity-bar">
+            <Space size={10}>
+              <Text strong style={{fontSize:15}}>teamLab Borderless Tokyo</Text>
+              <Text type="secondary">|</Text>
+              <Text type="secondary" style={{fontSize:13}}>Nov 2025</Text>
+              <Text type="secondary">|</Text>
+              <Tag color="blue" style={{fontSize:11}}>KBR-JP-2025-001</Tag>
+              <Tag color="purple" style={{fontSize:11}}>Merchant-Initiated</Tag>
+            </Space>
+            <Space>
+              <Tag color={pendingIssues.length ? 'warning' : 'success'}>
+                {pendingIssues.length ? `${pendingIssues.length} Pending Issues` : 'All Issues Resolved'}
+              </Tag>
+            </Space>
+          </div>
+
+          {/* Steps bar */}
+          <div className="steps-bar">
+            <Steps
+              size="small"
+              current={2}
+              items={STEPS.map((s,i)=>({
+                title: s.title,
+                status: i < 2 ? 'finish' : i === 2 ? 'process' : 'wait',
+                onClick: ()=>{
+                  const pages = ['kbr-detail-p1.html','kbr-detail-p2.html','kbr-detail-p3.html','kbr-detail-p4.html',null,'kbr-detail-p6.html'];
+                  if (pages[i]) window.location.href = pages[i];
+                },
+                style:{ cursor: ['kbr-detail-p1.html','kbr-detail-p2.html','kbr-detail-p3.html','kbr-detail-p4.html',null,'kbr-detail-p6.html'][i] ? 'pointer' : 'default' },
+              }))}
+            />
+          </div>
+
+          {/* Global action bar */}
+          <div className="global-bar">
+            <Button
+              size="small"
+              type={globalPanel==='deduction'?'primary':'default'}
+              onClick={()=>setGlobalPanel(p=>p==='deduction'?null:'deduction')}>
+              💰 Add Deduction
+            </Button>
+            <Button
+              size="small"
+              type={globalPanel==='attachments'?'primary':'default'}
+              onClick={()=>setGlobalPanel(p=>p==='attachments'?null:'attachments')}>
+              📎 Attachments
+            </Button>
+          </div>
+
+          {/* Deduction panel */}
+          {globalPanel === 'deduction' && (
+            <div style={{background:'#fffbe6',borderBottom:'1px solid #ffe58f',padding:'12px 24px',flexShrink:0}}>
+              <Space size={12} wrap>
+                <Text strong style={{fontSize:13}}>Add Manual Deduction</Text>
+                <Select placeholder="Reason" style={{width:200}} size="small" options={ISSUE_REASONS.map(r=>({label:r,value:r}))} value={dedReason} onChange={setDedReason} />
+                <Input prefix="USD" placeholder="Amount" style={{width:130}} size="small" value={dedAmount} onChange={e=>setDedAmount(e.target.value)} />
+                <Button size="small" type="primary" onClick={()=>{ message.success('Deduction added'); setGlobalPanel(null); }}>Apply</Button>
+                <Button size="small" onClick={()=>setGlobalPanel(null)}>Cancel</Button>
+              </Space>
+            </div>
+          )}
+
+          {/* Attachments panel */}
+          {globalPanel === 'attachments' && (
+            <div style={{background:'#f0f9ff',borderBottom:'1px solid #bae6fd',padding:'12px 24px',flexShrink:0}}>
+              <Space size={8} direction="vertical" style={{width:'100%'}}>
+                <Text strong style={{fontSize:13}}>Supporting Documents</Text>
+                <Space wrap>
+                  {['Merchant_Statement_Nov25.pdf','Email_Dispute_BD001.pdf'].map(f=>(
+                    <Tag key={f} closable style={{fontSize:12,padding:'4px 8px'}}>{f}</Tag>
+                  ))}
+                  <Upload showUploadList={false} beforeUpload={()=>false}>
+                    <Button size="small">+ Upload</Button>
+                  </Upload>
+                </Space>
+              </Space>
+            </div>
+          )}
+
+          {/* Content area */}
+          <div className="content-area">
+            {/* Demo bar */}
+            <Alert
+              type="warning"
+              style={{marginBottom:16,fontSize:12}}
+              message={
+                <Space wrap size={6}>
+                  <Text strong>Demo State:</Text>
+                  {Object.entries(DEMO_STATES).map(([k,v])=>(
+                    <Button key={k} size="small" type={demoKey===k?'primary':'default'} onClick={()=>setDemoKey(k)}>{v.label}</Button>
+                  ))}
+                </Space>
+              }
+            />
+
+            {/* Body: left (main) + right (sidebar) */}
+            <Row gutter={16} align="top">
+              {/* LEFT column */}
+              <Col flex="1" style={{minWidth:0}}>
+
+                {/* All-resolved alert */}
+                {effectiveAllResolved && !effectiveGmReq && (
+                  <Alert type="success" showIcon
+                    message="All issues resolved — ready to proceed to Review & Submit."
+                    style={{marginBottom:12}} />
+                )}
+                {effectiveGmReq && demo.gmStatus === 'rejected' && (
+                  <Alert type="error" showIcon
+                    message="GM rejected the adjustments. Please revise and resubmit."
+                    style={{marginBottom:12}} />
+                )}
+
+                {/* Summary stats */}
+                <Card size="small" style={{marginBottom:12}}>
+                  <Row gutter={16}>
+                    <Col span={6}><Statistic title="Total Issues" value={issues.length} /></Col>
+                    <Col span={6}><Statistic title="Pending" value={pendingIssues.length} valueStyle={{color: pendingIssues.length?'#faad14':'#52c41a'}} /></Col>
+                    <Col span={6}><Statistic title="Resolved" value={resolvedIssues.length} valueStyle={{color:'#52c41a'}} /></Col>
+                    <Col span={6}><Statistic title="Net Adjustment (USD)" value={totalAdj.toFixed(2)} valueStyle={{color:'#ff4d4f'}} prefix="$" /></Col>
+                  </Row>
+                </Card>
+
+                {/* Ticket collapse */}
+                <div style={{marginBottom:12, display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+                  <Text strong>Issue Tickets</Text>
+                  <Button type="primary" size="small" onClick={()=>{ setNewTicket('BD-001'); setAddIssueOpen(true); }}>+ New Issue</Button>
+                </div>
+                <Collapse
+                  defaultActiveKey={['BD-001','CEG-012']}
+                  items={collapseItems}
+                  style={{marginBottom:16}}
+                />
+
+              </Col>
+
+              {/* RIGHT column */}
+              <Col width={280} style={{flexShrink:0}}>
+
+                {/* Settlement impact */}
+                <Card size="small" title="Settlement Impact" style={{marginBottom:12}}>
+                  <Space direction="vertical" style={{width:'100%'}} size={4}>
+                    <div style={{display:'flex',justifyContent:'space-between',fontSize:12}}>
+                      <Text type="secondary">Gross Settlement</Text>
+                      <Text strong>$5,800.00</Text>
+                    </div>
+                    <div style={{display:'flex',justifyContent:'space-between',fontSize:12}}>
+                      <Text type="secondary">Total Adjustments</Text>
+                      <Text type="danger">${totalAdj.toFixed(2)}</Text>
+                    </div>
+                    <Divider style={{margin:'6px 0'}} />
+                    <div style={{display:'flex',justifyContent:'space-between',fontSize:13}}>
+                      <Text strong>Net Payable</Text>
+                      <Text strong type="success">${(GROSS + totalAdj).toFixed(2)}</Text>
+                    </div>
+                    <Progress
+                      percent={Math.round(Math.abs(totalAdj)/GROSS*100)}
+                      strokeColor={adjPct>GM_THRESHOLD_PCT?'#ff4d4f':'#52c41a'}
+                      size="small"
+                      format={p=>`${p}% adj`}
+                    />
+                    {needsGM && (
+                      <Alert type="warning" showIcon message={`>${(GM_THRESHOLD_PCT*100)}% — GM approval required`} style={{fontSize:11,padding:'4px 8px'}} />
+                    )}
+                  </Space>
+                </Card>
+
+                {/* GM Approval card */}
+                {renderGMCard()}
+
+                {/* Progress checklist */}
+                <Card size="small" title="Progress" style={{marginBottom:12}}>
+                  <Space direction="vertical" style={{width:'100%'}} size={0}>
+                    {checks.map((c,i)=>(
+                      <div key={i} className="checklist-item">
+                        <span style={{color: c.done?'#52c41a':'#d9d9d9',fontSize:16}}>{c.done?'✓':'○'}</span>
+                        <Text style={{fontSize:12, color: c.done?'#262626':'#8c8c8c'}}>{c.label}</Text>
+                      </div>
+                    ))}
+                  </Space>
+                  <Divider style={{margin:'10px 0'}} />
+                  <Button
+                    type="primary"
+                    block
+                    disabled={!allChecked && !(effectiveAllResolved && (!effectiveGmReq || demo.gmStatus==='approved'))}
+                    href="kbr-detail-p4.html">
+                    Proceed to Review & Submit →
+                  </Button>
+                </Card>
+
+                {/* Quick actions */}
+                <Card size="small" title="Quick Actions">
+                  <Space direction="vertical" style={{width:'100%'}} size={6}>
+                    <Button size="small" block onClick={()=>setAddIssueOpen(true)}>+ Add Issue</Button>
+                    <Button size="small" block onClick={()=>setGlobalPanel('deduction')}>+ Manual Deduction</Button>
+                    <Button size="small" block onClick={()=>setGlobalPanel('attachments')}>📎 Manage Attachments</Button>
+                    <Button size="small" block href="kbr-detail-p2.html">← Back to Reconciliation</Button>
+                  </Space>
+                </Card>
+
+              </Col>
+            </Row>
+          </div>
+        </div>
+      </div>
+
+      {/* Add Issue Modal */}
+      <Modal
+        title="Add New Issue"
+        open={addIssueOpen}
+        onOk={handleAddIssue}
+        onCancel={()=>setAddIssueOpen(false)}
+        okText="Add Issue">
+        <Form layout="vertical" size="small">
+          <Form.Item label="Ticket">
+            <Select value={newTicket} onChange={setNewTicket} style={{width:'100%'}}
+              options={[{label:'BD-001',value:'BD-001'},{label:'CEG-012',value:'CEG-012'}]} />
+          </Form.Item>
+          <Form.Item label="Reason">
+            <Select placeholder="Select reason" value={newReason} onChange={setNewReason} style={{width:'100%'}}
+              options={ISSUE_REASONS.map(r=>({label:r,value:r}))} />
+          </Form.Item>
+          <Form.Item label="Adjustment Amount (USD)">
+            <InputNumber prefix="-$" placeholder="e.g. 12.00" style={{width:'100%'}} value={newAmount} onChange={setNewAmount} />
+          </Form.Item>
+          <Form.Item label="Note / Detail">
+            <Input.TextArea rows={3} placeholder="Describe the issue..." value={newDetail} onChange={e=>setNewDetail(e.target.value)} />
+          </Form.Item>
+        </Form>
+      </Modal>
+    </ConfigProvider>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

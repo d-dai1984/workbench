@@ -10,5 +10,13 @@ export const klookBenchTheme: ThemeConfig = {
     colorPrimary: '#1677ff', // keep in sync with klook-bench-tokens.css
     borderRadius: 6,
   },
+  components: {
+    Card: {
+      bodyPaddingSM: 24,
+      headerPaddingSM: 24,
+      headerHeightSM: 56,
+      borderRadiusLG: 16,
+    },
+  },
   // algorithm: darkAlgorithm, // enable for dark mode
 }
