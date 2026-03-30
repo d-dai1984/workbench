@@ -1,6 +1,6 @@
 # Klook Workbench Framework — 工程介绍文档
 
-> 版本：0.1.0 · 最后更新：2026-03-18
+> 版本：0.2.0 · 最后更新：2026-03-30
 
 ---
 
@@ -27,6 +27,8 @@
 
 ## 三、目录结构
 
+> **v0.2.0 对齐下游 UmiJS 项目目录规范（2026-03-30）**
+
 ```
 workbench-framework-demo/
 │
@@ -36,71 +38,72 @@ workbench-framework-demo/
 ├── docs/                          # 工程文档
 │   └── PROJECT-GUIDE.md           # ← 本文件
 │
-├── .agents/                       # AI Agent 配置
-│   └── skills/klook-theme/        # Klook-2026 Theme Skill
-│       ├── SKILL.md               # 风格化约束说明
-│       └── resources/
-│           ├── design-tokens.json # 设计 token 数据
-│           └── component-patterns.md
+├── config/                        # 构建/环境配置（预留，Vite 配置仍在根目录）
+├── mock/                          # Mock 数据（预留）
+│
+├── skill/                         # AI Agent Skill 资源
+│   └── klook-2b-design-skill-3.27/
 │
 └── src/
     ├── main.tsx                   # 入口
     ├── App.tsx                    # 根组件 + 路由逻辑
     ├── App.css                    # 全局框架样式
     ├── index.css                  # CSS Reset
+    ├── access.ts                  # 权限定义入口（预留）
     │
-    ├── shell/                     # 🔧 框架层（全业务共用）
+    ├── core/                      # 🔧 核心配置（对应下游 core/）
+    │   ├── config/                #   配置层
+    │   │   ├── merchantRoles.ts        # 业务线定义 + BUSINESS_LINE_KEYS
+    │   │   ├── nav.types.ts            # NavConfig 类型定义
+    │   │   ├── nav.config.json         # 默认导航配置
+    │   │   ├── buildMenuItems.tsx      # JSON → AntD MenuItem 转换
+    │   │   ├── registry.ts             # 业务线 NavConfig 注册中心
+    │   │   └── modules/                # 各业务线导航配置
+    │   │       ├── bdbench.nav.json
+    │   │       ├── campaign.nav.json
+    │   │       ├── designsystem.nav.json
+    │   │       ├── finance.nav.json
+    │   │       └── ma.nav.json
+    │   └── theme/                 #   主题系统
+    │       ├── klook-bench-tokens.css  # CSS Custom Properties
+    │       ├── klook-2026.ts           # Klook 2026 主题
+    │       ├── klook-bench-2026.ts     # Bench 2026 变体
+    │       ├── theme.ts                # 基础蓝色主题
+    │       ├── ThemeSync.tsx           # CSS var ↔ AntD token 同步
+    │       └── index.ts                # barrel 导出
+    │
+    ├── components/                # 🧩 通用组件（对应下游 components/）
     │   ├── layout/                #   布局组件
     │   │   ├── KlookBenchLayout.tsx    # 顶层 Layout 编排
     │   │   ├── KlookBenchHeader.tsx    # 顶部导航 + Merchant 切换
     │   │   ├── KlookBenchSidebar.tsx   # 左侧侧边栏（展开/收起）
     │   │   ├── KlookBenchNav.tsx       # 导航菜单渲染
     │   │   └── KlookBenchContent.tsx   # 右侧内容区域 + Grid Overlay
-    │   ├── config/                #   配置层
-    │   │   ├── merchantRoles.ts        # 业务线定义 + BUSINESS_LINE_KEYS
-    │   │   ├── nav.types.ts            # NavConfig 类型定义
-    │   │   ├── nav.config.json         # 默认导航配置
-    │   │   └── buildMenuItems.tsx      # JSON → AntD MenuItem 转换
-    │   ├── theme/                 #   主题系统
-    │   │   ├── klook-bench-tokens.css  # CSS Custom Properties（色值/间距等）
-    │   │   └── index.ts                # AntD ConfigProvider theme 配置
     │   ├── shared/                #   通用业务组件
+    │   │   └── ModuleCard.tsx
     │   └── icons/                 #   图标组件
+    │       └── SidebarIcons.tsx
     │
-    ├── modules/                   # 📦 业务模块（按业务线分目录）
-    │   ├── registry.ts            #   模块注册中心
-    │   ├── bdbench/               #   BD Bench
-    │   │   └── nav.config.json
-    │   ├── ma/                    #   MA
-    │   │   └── nav.config.json
-    │   ├── campaign/              #   Campaign
-    │   │   ├── nav.config.json
-    │   │   ├── pages/             #     页面组件
-    │   │   ├── components/        #     业务组件
-    │   │   └── styles/            #     样式
-    │   ├── finance/               #   Finance
-    │   │   └── nav.config.json
-    │   └── designsystem/          #   Design System
-    │       ├── nav.config.json         # DS 侧边栏配置
+    ├── pages/                     # 📄 页面组件（对应下游 pages/）
+    │   ├── Workbench/             #   工作台首页（Dashboard）
+    │   ├── Grid/                  #   Grid 栅格系统
+    │   ├── Campaign/              #   Campaign 业务页面
+    │   │   ├── PromotionCreativePage.tsx
+    │   │   ├── CampaignBuilderPage.tsx
+    │   │   └── ActivityCreatePage/     # 多步表单
+    │   ├── Finance/               #   Finance 业务页面
+    │   │   ├── KbrDetailPage.tsx
+    │   │   └── KbrDetailPageSkeleton.tsx
+    │   └── DesignSystem/          #   Design System Showcase
     │       ├── DesignSystemRouter.tsx   # Section 路由
-    │       ├── DesignSystemOverview.tsx # Overview 总览页
-    │       └── DesignSystemOverview.css
+    │       ├── DesignSystemOverview.tsx # Overview 总览
+    │       ├── data/                   # 展示数据
+    │       └── modules/                # 模块级组件展示页
     │
-    ├── demo/                      # 🎨 展示 / Showcase
-    │   ├── dashboard/             #   Dashboard Demo
-    │   ├── grid/                  #   Grid 栅格系统 Demo
-    │   └── design-system/         #   原子 + 模块组件 Demo
-    │       ├── DesignSystemPage.tsx     # 全量原子组件
-    │       ├── CodePreview.tsx         # 代码预览组件
-    │       └── modules/               # 模块级组件 Demo
-    │           ├── CampaignTableDemo.tsx
-    │           ├── TemplateCardDemo.tsx
-    │           ├── HeatmapCalendarDemo.tsx
-    │           └── StepFormSectionDemo.tsx
-    │
-    └── theme/                     # 主题同步（CSS var ↔ AntD token）
-        ├── index.ts
-        └── ThemeSync.tsx
+    ├── hooks/                     # 🪝 自定义 Hooks（对应下游 hooks/）
+    ├── services/                  # 🔌 API 服务层（对应下游 services/）
+    │   └── api/
+    └── types/                     # 📐 TypeScript 类型定义（对应下游 types/）
 ```
 
 ---
@@ -113,23 +116,23 @@ workbench-framework-demo/
 ┌────────────────────────────────────────────────┐
 │                   App.tsx                       │  路由 + 状态
 ├────────────────────────────────────────────────┤
-│                  shell/                         │  框架层（Header / Sidebar / Content）
+│          core/ + components/                    │  框架层（配置 / 主题 / 布局）
 │  ┌──────────┐  ┌──────────┐  ┌──────────────┐  │
 │  │  Header   │  │ Sidebar  │  │   Content    │  │
 │  │ Merchant ▼│  │ Nav JSON │  │  children()  │  │
 │  └──────────┘  └──────────┘  └──────────────┘  │
 ├────────────────────────────────────────────────┤
-│                  modules/                       │  业务层（各业务线独立目录）
-│  bdbench/ │ ma/ │ campaign/ │ finance/ │ ds/   │
+│                  pages/                         │  页面层（各业务线独立目录）
+│  Workbench/ │ Campaign/ │ Finance/ │ DS/       │
 └────────────────────────────────────────────────┘
 ```
 
 ### 4.2 业务线接入流程
 
-1. 在 `modules/` 下创建业务目录（如 `modules/newbiz/`）
-2. 编写 `nav.config.json`（定义 Sidebar 菜单结构）
-3. 在 `merchantRoles.ts` 的 `BUSINESS_LINE_KEYS` 中添加 key
-4. 在 `registry.ts` 中导入并注册该 nav config
+1. 在 `pages/` 下创建业务页面目录（如 `pages/NewBiz/`）
+2. 在 `core/config/modules/` 编写 `newbiz.nav.json`（定义 Sidebar 菜单结构）
+3. 在 `core/config/merchantRoles.ts` 的 `BUSINESS_LINE_KEYS` 中添加 key
+4. 在 `core/config/registry.ts` 中导入并注册该 nav config
 5. 在 `App.tsx` 的 `renderContent()` 中添加页面路由
 
 ### 4.3 导航配置格式
@@ -283,12 +286,13 @@ export function MyComponent() { ... }
 
 ### 7.4 业务模块交付 Checklist
 
-- [ ] `modules/<biz>/nav.config.json` — 侧边栏导航配置
-- [ ] `modules/<biz>/pages/` — 页面组件
-- [ ] `modules/<biz>/components/` — 业务组件
-- [ ] `modules/<biz>/styles/` — 样式文件
-- [ ] `merchantRoles.ts` — 注册业务线 key
-- [ ] `registry.ts` — 注册 nav config
+- [ ] `core/config/modules/<biz>.nav.json` — 侧边栏导航配置
+- [ ] `pages/<Biz>/` — 页面组件
+- [ ] `components/` — 通用组件（如有新增）
+- [ ] `hooks/` — 自定义 Hooks（如有新增）
+- [ ] `services/api/` — API 服务层（如有新增）
+- [ ] `core/config/merchantRoles.ts` — 注册业务线 key
+- [ ] `core/config/registry.ts` — 注册 nav config
 - [ ] `App.tsx renderContent()` — 添加路由分支
 - [ ] 所有组件使用 AntD 组件 + CSS 变量
 - [ ] 间距遵循 8px Grid
@@ -314,17 +318,17 @@ npm run preview
 
 ## 八、Skill 系统
 
-项目集成了 AI Agent Skill 系统（`.agents/skills/`），目前包含：
+项目集成了 AI Agent Skill 系统（`skill/`），目前包含：
 
-### klook-theme Skill
+### klook-2b-design-skill
 
-| 文件 | 内容 |
+| 目录 | 内容 |
 |------|------|
-| `SKILL.md` | 设计原则 / 色彩 / 字体 / 间距 / 圆角 / 阴影 / Do-Don't / Code Patterns |
-| `design-tokens.json` | 可编程的 token 数据 |
-| `component-patterns.md` | 组件组合模式速查表 |
+| `skill/klook-2b-design-skill-3.27/SKILL.md` | 2B 中后台设计系统规则 |
+| `skill/klook-2b-design-skill-3.27/references/` | 14 份参考文档（页面模式 / 业务模块 / 组件选型等） |
+| `skill/AntD-SKILL.md` | antd 6.x 组件选型与最佳实践 |
 
-Agent 在生成代码时会自动读取 SKILL.md，确保产出代码遵循 Klook 规范。
+Agent 在生成代码时会自动读取 SKILL.md，确保产出代码遵循 Klook 2B 规范。
 
 ---
 

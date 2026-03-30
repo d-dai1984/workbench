@@ -10,10 +10,15 @@ B-end workbench framework for Klook internal tools. Supports multiple business l
 
 ## Architecture
 
-### Three-Layer Directory Structure
-- `src/shell/` — shared framework layer (layout, theme, config, icons)
-- `src/modules/` — business modules, each with own `nav.config.json`, pages, components
-- `src/demo/` — demo/showcase pages, non-production
+### Directory Structure (aligned with downstream UmiJS project)
+- `src/core/` — core config + theme (config/, theme/)
+- `src/components/` — shared components (layout/, shared/, icons/)
+- `src/pages/` — page components per business line (Workbench/, Campaign/, Finance/, DesignSystem/, Grid/)
+- `src/hooks/` — custom hooks
+- `src/services/api/` — API service layer
+- `src/types/` — shared TypeScript types
+- `src/access.ts` — permission definitions
+- `config/` / `mock/` — build config and mock data (root level, reserved)
 
 ### Routing
 No React Router. Content rendering is manual conditional blocks in `App.tsx → renderContent()`, driven by `businessLine` + `selectedKey` state.
@@ -22,7 +27,7 @@ No React Router. Content rendering is manual conditional blocks in `App.tsx → 
 All state lifted in `App.tsx` via `useState`. No Redux/Zustand. Key states persisted to localStorage with `klook-bench.*` prefix.
 
 ### Navigation
-JSON-driven via `NavConfig` type (groups → items → optional children). Each business line has its own `nav.config.json`. Converted to AntD Menu items via `buildMenuItems()`.
+JSON-driven via `NavConfig` type (groups → items → optional children). Each business line has its own nav config in `core/config/modules/*.nav.json`. Converted to AntD Menu items via `buildMenuItems()`.
 
 ### Dual-Layer Theme System
 1. **AntD ConfigProvider** — 3 themes: `klook2026Theme` (orange #FF5B00), `klookBenchTheme` (blue #1677ff), `klookBench2026Theme` (blue variant)
@@ -37,11 +42,11 @@ JSON-driven via `NavConfig` type (groups → items → optional children). Each 
 - Spacing: 8px grid (xs 4px, sm 8px, md 16px, lg 24px, xl 32px, xxl 48px)
 - Border radius: 6px (components), 4px (elements)
 - Colors: Primary orange #FF5B00 (Klook 2026), success #00B33C, warning #FFB800, error #FF4D4F
-- Token files: `src/shell/theme/klook-2026.ts`, CSS fallback in `klook-bench-tokens.css`
+- Token files: `src/core/theme/klook-2026.ts`, CSS fallback in `klook-bench-tokens.css`
 - Reference: [docs/TOKENS.md](docs/TOKENS.md)
 
 ## Active Business Lines
-5 functional: `bdbench`, `ma`, `campaign`, `finance`, `designsystem` (of 12 total roles defined in `merchantRoles.ts`)
+5 functional: `bdbench`, `ma`, `campaign`, `finance`, `designsystem` (of 12 total roles defined in `core/config/merchantRoles.ts`)
 
 ## Implemented Pages
 - Campaign: `PromotionCreativePage`, `CampaignBuilderPage`
@@ -55,7 +60,7 @@ JSON-driven via `NavConfig` type (groups → items → optional children). Each 
 - One root `ConfigProvider` unless strict isolation needed
 - CSS naming: BEM convention, no CSS modules
 - File naming: PascalCase for components, camelCase for utils, kebab-case for CSS
-- New business line: add module in `src/modules/`, register in `registry.ts`, add route case in `App.tsx`
+- New business line: add nav config in `core/config/modules/`, page dir in `pages/`, register in `core/config/registry.ts`, add route case in `App.tsx`
 
 ## Skills
 - [Ant Design Guide](skill/AntD-SKILL.md) — antd 6.x component selection, theming, and best practices

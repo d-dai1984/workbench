@@ -1,7 +1,7 @@
 import { Menu } from 'antd'
 import type { MenuProps } from 'antd'
-import type { NavConfig } from '../../config/nav.types'
-import { buildMenuItems } from '../../config/buildMenuItems'
+import type { NavConfig } from '../../core/config/nav.types'
+import { buildMenuItems } from '../../core/config/buildMenuItems'
 
 export interface KlookBenchNavProps {
   config: NavConfig

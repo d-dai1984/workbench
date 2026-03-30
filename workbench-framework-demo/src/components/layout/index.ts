@@ -1,6 +1,3 @@
 export { KlookBenchLayout } from './KlookBenchLayout'
 export { KlookBenchHeader } from './KlookBenchHeader'
 export type { MerchantRoleItem } from './KlookBenchHeader'
-export { KlookBenchSidebar } from './KlookBenchSidebar'
-export { KlookBenchNav } from './KlookBenchNav'
-export { KlookBenchContent } from './KlookBenchContent'
